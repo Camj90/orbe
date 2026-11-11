@@ -1,0 +1,303 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Orbe Dron Rodante</title>
+<meta name="description" content="Orbe: dron de 7 pulgadas dentro de una jaula rodante impresa en la Bambu Lab H2D. Rueda, sube muros, recorre techos, vuela y amortigua caÃ­das. Demo 3D interactiva, funciones, presupuesto de peso y energÃ­a, y BOM.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/orbe.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23f2b705'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23111' stroke-width='3'/%3E%3Cpath d='M8 16h16M16 8v16' stroke='%23111' stroke-width='2'/%3E%3C/svg%3E">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="#top" aria-label="Orbe, inicio">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" class="b-bg"/><circle cx="16" cy="16" r="10" fill="none" class="b-st" stroke-width="3"/><path d="M8 16h16M16 8v16" class="b-st" stroke-width="2"/></svg>
+      <span>Orbe</span><em>Krontec Lab</em>
+    </a>
+    <nav class="links" aria-label="Secciones">
+      <a href="#demo">Demo 3D</a><a href="#modos">Funciones</a><a href="#caida">CaÃ­das</a><a href="#energia">Peso y energÃ­a</a><a href="#piezas">Piezas</a><a href="#bom">BOM</a>
+    </nav>
+    <a class="btn sm ghost" href="https://camj90.github.io/mini-planta/">Mini Planta â†—</a>
+    <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema claro u oscuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero wrap">
+    <div class="hero-text">
+      <p class="eyebrow">Propuesta Â· Proyecto Bambu Lab H2D Â· noviembre 2026</p>
+      <h1>Un dron que rueda, sube muros y camina por el techo</h1>
+      <p class="lead">Orbe es el dron de inspecciÃ³n dentro de una <strong>jaula rodante impresa</strong>. En el suelo rueda gastando poco. Frente a un muro gira el empuje y lo sube. En el techo se aprieta contra Ã©l y lo recorre. Si cae, la jaula de TPU absorbe el golpe y las hÃ©lices nunca tocan nada.</p>
+      <div class="cta"><a class="btn primary" href="#demo">Probar la demo 3D</a><a class="btn" href="#bom">Ver lista de materiales</a></div>
+    </div>
+    <dl class="stats">
+      <div><dt>Jaula</dt><dd>Ã˜ 46 <small>cm Ã— 44 cm de largo</small></dd></div>
+      <div><dt>Peso estimado</dt><dd>â‰ˆ 1,8 <small>kg con baterÃ­a</small></dd></div>
+      <div><dt>AutonomÃ­a</dt><dd>1 h 45 <small>rodando Â· 16 min volando</small></dd></div>
+      <div><dt>InversiÃ³n</dt><dd>+ $256 mil <small>sobre el dron Â· â‰ˆ $990 mil en total</small></dd></div>
+    </dl>
+  </section>
+
+  <section id="demo" class="wrap demo" aria-label="DemostraciÃ³n interactiva">
+    <div class="hmi">
+      <div class="hmi-bar">
+        <div class="hmi-id"><span class="live" aria-hidden="true"></span><b>ORBE-01</b><span>Dron rodante de inspecciÃ³n</span></div>
+        <div class="hmi-chips"><span class="lbl">Modo</span><span id="modeChip" class="chip ok">En reposo</span><span class="lbl">Contacto</span><span id="contactChip" class="chip-plain mono">Suelo</span></div>
+        <div class="hmi-clock"><span class="lbl">Hora simulada</span><b id="simClock" class="mono">09:00:00</b></div>
+      </div>
+      <div class="hmi-body">
+        <div class="viewport" id="viewport">
+          <div class="vp-tools" role="toolbar" aria-label="Controles de la vista 3D">
+            <div class="seg" aria-label="CÃ¡mara">
+              <button type="button" data-view="iso" aria-pressed="true">IsomÃ©trica</button>
+              <button type="button" data-view="side" aria-pressed="false">Lateral</button>
+              <button type="button" data-view="front" aria-pressed="false">Frontal</button>
+              <button type="button" data-view="follow" aria-pressed="false">Seguir</button>
+              <button type="button" data-view="cage" aria-pressed="false">Jaula</button>
+              <button type="button" data-view="scale" aria-pressed="false">Escala</button>
+            </div>
+            <div class="seg">
+              <button type="button" id="tLabels" aria-pressed="true">Etiquetas</button>
+              <button type="button" id="tForces" aria-pressed="false">Fuerzas</button>
+              <button type="button" id="tDims" aria-pressed="false">Cotas</button>
+              <button type="button" id="tMat" aria-pressed="false">Por material</button>
+              <button type="button" id="pauseBtn" aria-pressed="false"><span>Pausar</span></button>
+            </div>
+          </div>
+          <div class="mat-legend" id="matLegend" hidden>
+            <b>FabricaciÃ³n</b>
+            <span><i style="--c:#2fb3a6"></i>PAHT-CF impreso</span>
+            <span><i style="--c:#f2b705"></i>PETG-HF impreso</span>
+            <span><i style="--c:#ff6b35"></i>TPU 95A impreso</span>
+            <span><i style="--c:#8792a0"></i>Tubo de carbono</span>
+            <span><i style="--c:#3f8fe0"></i>ElectrÃ³nica comprada</span>
+          </div>
+          <p class="vp-hint">Arrastra para girar Â· rueda o pellizco para acercar Â· clic en una pieza para ver su ficha</p>
+          <article class="info-card" id="infoCard" hidden>
+            <header><span id="infoTag" class="mono">JA-01</span><button id="infoClose" type="button" class="icon-btn sm" aria-label="Cerrar ficha">Ã—</button></header>
+            <h3 id="infoName">Jaula</h3>
+            <p id="infoDesc"></p>
+            <dl><div><dt>ImpresiÃ³n H2D</dt><dd id="infoPrint"></dd></div><div><dt>FunciÃ³n</dt><dd id="infoFunc"></dd></div></dl>
+          </article>
+        </div>
+
+        <aside class="hmi-side">
+          <div class="panel">
+            <h3 class="ph">Escenario</h3>
+            <div class="scen">
+              <button type="button" data-scen="suelo" aria-pressed="false"><b>Rodar</b><span>Suelo, ~50 W</span></button>
+              <button type="button" data-scen="muro" aria-pressed="false"><b>Subir el muro</b><span>Inspecciona un tablero a 1,4 m</span></button>
+              <button type="button" data-scen="techo" aria-pressed="false"><b>Recorrer el techo</b><span>Muro â†’ techo â†’ aterrizaje</span></button>
+              <button type="button" data-scen="volar" aria-pressed="false"><b>Volar</b><span>Pasa sobre un obstÃ¡culo</span></button>
+              <button type="button" data-scen="caida" aria-pressed="false"><b>Prueba de caÃ­da</b><span>1,5 m con motores apagados</span></button>
+            </div>
+            <div class="watch"><span class="lbl">QuÃ© observar Â· <b id="watchTitle">En reposo</b></span><p id="watchText"></p></div>
+          </div>
+          <div class="kpis k3">
+            <div class="kpi"><span>Consumo</span><b id="kPower">0 W</b></div>
+            <div class="kpi"><span>AutonomÃ­a al ritmo actual</span><b id="kAuton">â€”</b></div>
+            <div class="kpi"><span>BaterÃ­a</span><b id="kBatt">100 %</b></div>
+            <div class="kpi"><span>Altura del centro</span><b id="kAlt">0,23 m</b></div>
+            <div class="kpi"><span>Velocidad</span><b id="kSpeed">0,00 m/s</b></div>
+            <div class="kpi"><span>Contacto</span><b id="kContact">Suelo</b></div>
+          </div>
+          <div class="panel">
+            <h3 class="ph">CÃ¡mara tÃ©rmica <span id="tState" class="chip ok">Normal</span></h3>
+            <div class="thermal-wrap">
+              <canvas id="thermal" width="32" height="24" aria-label="Imagen tÃ©rmica simulada de 32 por 24 pÃ­xeles"></canvas>
+              <div class="t-scale" aria-hidden="true"><span>82 Â°C</span><span>20 Â°C</span></div>
+            </div>
+            <dl class="kv"><div><dt>MÃ¡xima</dt><dd class="mono" id="tMax">23,0 Â°C</dd></div><div><dt>Objetivo</dt><dd id="tTarget">Sin punto caliente a la vista</dd></div></dl>
+            <p class="note">MLX90640 Â· 32 Ã— 24 pÃ­xeles Â· 110Â°. Imagen simulada.</p>
+          </div>
+        </aside>
+      </div>
+      <div class="hmi-bottom">
+        <div class="panel">
+          <h3 class="ph">Consumo elÃ©ctrico <span class="ph-meta">Ãºltimo minuto Â· baterÃ­a 6S Li-ion, 89 Wh Ãºtiles</span></h3>
+          <svg id="trend" class="trend" viewBox="0 0 600 176" data-state="ok" role="img" aria-label="Consumo del Ãºltimo minuto">
+            <defs><linearGradient id="tg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="tg-a"/><stop offset="1" class="tg-b"/></linearGradient></defs>
+            <g class="grid"><line x1="44" x2="592" y1="152" y2="152"/><line x1="44" x2="592" y1="117" y2="117"/><line x1="44" x2="592" y1="82" y2="82"/><line x1="44" x2="592" y1="47" y2="47"/><line x1="44" x2="592" y1="12" y2="12"/></g>
+            <g class="ax"><text x="36" y="156">0</text><text x="36" y="121">100</text><text x="36" y="86">200</text><text x="36" y="51">300</text><text x="36" y="16">400 W</text>
+              <text x="44" y="172" text-anchor="start">âˆ’60 s</text><text x="592" y="172" text-anchor="end">ahora</text></g>
+            <line class="th ok" x1="44" x2="592" y1="134.5" y2="134.5"/><text class="thl ok" x="588" y="130" text-anchor="end">Rodar 50 W</text>
+            <line class="th warn" x1="44" x2="592" y1="36.5" y2="36.5"/><text class="thl warn" x="588" y="32" text-anchor="end">Volar 330 W</text>
+            <path id="trendArea" class="area" d=""/><path id="trendLine" class="line" d=""/><circle id="trendDot" class="dot" r="4" cx="592" cy="152"/>
+          </svg>
+        </div>
+        <div class="panel" id="impCard">
+          <h3 class="ph">Prueba de caÃ­da <span class="ph-meta">se completa al correr el escenario</span></h3>
+          <div class="imp">
+            <div><span>Altura</span><b id="impH" class="mono">â€”</b></div>
+            <div><span>Velocidad al impacto</span><b id="impV" class="mono">â€”</b></div>
+            <div><span>Recorrido de amortiguaciÃ³n</span><b id="impD" class="mono">â€”</b></div>
+            <div class="good"><span>DesaceleraciÃ³n con TPU</span><b id="impG" class="mono">â€”</b></div>
+            <div class="bad"><span>Con jaula rÃ­gida (3 mm)</span><b id="impR" class="mono">â€”</b></div>
+          </div>
+          <h3 class="ph sub">Registro</h3>
+          <div class="table-scroll"><table class="log"><thead><tr><th>Hora</th><th>Evento</th><th>Modo</th></tr></thead><tbody id="logBody"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="modos" class="wrap block">
+    <div class="sec-head"><p class="eyebrow">Funciones</p><h2>Cinco formas de moverse</h2>
+      <p class="lead">El truco estÃ¡ en que el dron puede girar dentro de la jaula. Al cambiar hacia dÃ³nde apunta el empuje, pasa de rodar a trepar o a volar sin cambiar de hardware.</p></div>
+    <div class="modes">
+      <article class="mode"><span class="mono">â‰ˆ 50 W Â· 1 h 45</span><h3>Rodar</h3><p>Se inclina hacia adelante y empuja apenas para vencer la fricciÃ³n. Es el modo para recorrer pasillos y salas largas.</p></article>
+      <article class="mode"><span class="mono">â‰ˆ 300 W Â· 18 min</span><h3>Subir muros</h3><p>Gira el empuje unos 60Â° hacia la pared. Una parte lo sostiene y otra lo aprieta contra el muro para que la jaula ruede hacia arriba con tracciÃ³n.</p></article>
+      <article class="mode"><span class="mono">â‰ˆ 350 W Â· 15 min</span><h3>Recorrer techos</h3><p>Empuja hacia arriba mÃ¡s que su peso y queda apretado contra el techo. Puede inspeccionar bandejas, luminarias y caÃ±erÃ­as de cerca y estable.</p></article>
+      <article class="mode"><span class="mono">â‰ˆ 330 W Â· 16 min</span><h3>Volar</h3><p>Despega para pasar obstÃ¡culos o cambiar de nivel. Con el flujo Ã³ptico mantiene la posiciÃ³n dentro de una planta, donde no hay GPS.</p></article>
+      <article class="mode"><span class="mono">35 mm de frenado</span><h3>Caer bien</h3><p>Si pierde el control o se corta la energÃ­a, la jaula toca primero. Banda de TPU, anillos flexibles y amortiguadores del eje frenan el golpe.</p></article>
+    </div>
+    <p class="note wide">Consumos y autonomÃ­as estimados para 1,8 kg con una baterÃ­a 6S de Li-ion de 89 Wh Ãºtiles. Hay que medirlos en el banco de empuje antes de prometerlos a un cliente.</p>
+  </section>
+
+  <section id="caida" class="wrap block">
+    <div class="sec-head"><p class="eyebrow">AmortiguaciÃ³n</p><h2>Por quÃ© la jaula de TPU importa</h2>
+      <p class="lead">En una caÃ­da, lo que daÃ±a la electrÃ³nica es la desaceleraciÃ³n, y esa depende de en cuÃ¡ntos milÃ­metros se frena el golpe. Si se frena en el doble de distancia, el golpe es la mitad.</p></div>
+    <div class="split">
+      <div class="card pad">
+        <p class="formula">a â‰ˆ g Â· h / d</p>
+        <p class="muted">a: desaceleraciÃ³n media Â· h: altura de caÃ­da Â· d: distancia en que se frena. Para 1,5 m:</p>
+        <div class="bars" role="img" aria-label="DesaceleraciÃ³n segÃºn el recorrido de frenado">
+          <div class="bar"><span>Jaula rÃ­gida, 3 mm</span><i style="--w:100%" class="crit"></i><b class="mono">â‰ˆ 500 g</b></div>
+          <div class="bar"><span>Solo banda TPU, 15 mm</span><i style="--w:20%" class="warn"></i><b class="mono">â‰ˆ 100 g</b></div>
+          <div class="bar"><span>Banda + anillos + amortiguadores, 35 mm</span><i style="--w:8.6%" class="ok"></i><b class="mono">â‰ˆ 43 g</b></div>
+        </div>
+      </div>
+      <div class="card pad">
+        <h3>Tres capas que se suman</h3>
+        <ol class="layers3">
+          <li><b>Banda de rodado en TPU 95A</b><span>Relleno giroide al 20 %. Se comprime unos 15 mm y da agarre en muro y techo.</span></li>
+          <li><b>Anillos de PAHT-CF</b><span>RÃ­gidos para rodar, pero flexan unos 10 mm en un golpe sin romperse.</span></li>
+          <li><b>Amortiguadores del eje en TPU</b><span>Anillos entre el eje y los rayos. AÃ­slan el dron, la baterÃ­a y la Raspberry unos 10 mm mÃ¡s.</span></li>
+        </ol>
+        <p class="note">Valores de diseÃ±o. Se validan dejando caer la jaula con una IMU registrando a 1 kHz.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="energia" class="wrap block">
+    <div class="sec-head"><p class="eyebrow">Peso y energÃ­a</p><h2>1,8 kg con empuje de sobra</h2>
+      <p class="lead">Cuatro motores 2807 con hÃ©lices de 7" en 6S dan unos 7 kg de empuje total, cerca de 4 veces el peso. Ese margen permite trepar y apretarse contra el techo.</p></div>
+    <div class="split">
+      <div class="table-scroll card">
+        <table class="parts"><thead><tr><th>Bloque</th><th class="num">Peso aprox.</th><th>QuÃ© incluye</th></tr></thead>
+          <tbody>
+            <tr><td>BaterÃ­a</td><td class="num">600 g</td><td>6S 5000 mAh Li-ion</td></tr>
+            <tr><td>Dron 7"</td><td class="num">560 g</td><td>Frame, motores, controladora, hÃ©lices, receptor, GPS</td></tr>
+            <tr><td>Jaula</td><td class="num">450 g</td><td>Anillos, rayos, banda, tubos, eje, rodamientos</td></tr>
+            <tr><td>InspecciÃ³n</td><td class="num">150 g</td><td>Raspberry Pi 4, cÃ¡maras, BEC, caja</td></tr>
+            <tr><td>NavegaciÃ³n</td><td class="num">25 g</td><td>Flujo Ã³ptico y sensores de distancia</td></tr>
+            <tr class="total"><td>Total</td><td class="num">â‰ˆ 1,8 kg</td><td>Empuje â‰ˆ 7 kg Â· relaciÃ³n â‰ˆ 4:1</td></tr>
+          </tbody></table>
+      </div>
+      <div class="card pad">
+        <h3>AutonomÃ­a por modo</h3>
+        <div class="bars" role="img" aria-label="AutonomÃ­a estimada por modo en minutos">
+          <div class="bar"><span>Rodar</span><i style="--w:100%" class="ok"></i><b class="mono">107 min</b></div>
+          <div class="bar"><span>Subir muros</span><i style="--w:16.8%" class="warn"></i><b class="mono">18 min</b></div>
+          <div class="bar"><span>Volar</span><i style="--w:15%" class="warn"></i><b class="mono">16 min</b></div>
+          <div class="bar"><span>Recorrer techos</span><i style="--w:14%" class="warn"></i><b class="mono">15 min</b></div>
+        </div>
+        <p class="note">Una misiÃ³n tÃ­pica rueda la mayor parte del tiempo y trepa solo para llegar al punto de inspecciÃ³n.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="piezas" class="wrap block">
+    <div class="sec-head"><p class="eyebrow">ImpresiÃ³n en la H2D</p><h2>La jaula se imprime en segmentos</h2>
+      <p class="lead">La jaula mide 46 cm y la H2D imprime hasta unos 32 cm, asÃ­ que cada anillo sale en 6 segmentos de 60Â° que encajan con pasadores. En la demo, <b>Cotas</b> muestra un segmento dentro del volumen de la impresora.</p></div>
+    <div class="table-scroll card">
+      <table class="parts"><thead><tr><th>Pieza</th><th>Material</th><th class="num">Cant.</th><th>Medida aprox.</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td>Segmentos de anillo</td><td><span class="mat pacf">PAHT-CF</span></td><td class="num">12</td><td>Arco de 60Â°, Ã˜ 43 cm</td><td>UniÃ³n con pasador y tornillo M3 en inserto de bronce.</td></tr>
+          <tr><td>Banda de rodado</td><td><span class="mat tpu">TPU 95A HF</span></td><td class="num">12</td><td>Arco de 60Â°, 22 mm de alto</td><td>Relleno giroide al 20 %. Se reemplaza cuando se gasta.</td></tr>
+          <tr><td>Rayos</td><td><span class="mat pacf">PAHT-CF</span></td><td class="num">12</td><td>19 cm</td><td>Unen el anillo con el buje del eje.</td></tr>
+          <tr><td>Amortiguadores del eje</td><td><span class="mat tpu">TPU 95A HF</span></td><td class="num">2</td><td>Ã˜ 76 mm</td><td>Llevan el rodamiento 6800 al centro.</td></tr>
+          <tr><td>Uniones de larguero</td><td><span class="mat pacf">PAHT-CF</span></td><td class="num">16</td><td>20 Ã— 15 mm</td><td>Sujetan los 8 tubos de carbono a los anillos.</td></tr>
+          <tr><td>Abrazaderas del eje al dron</td><td><span class="mat petg">PETG-HF</span></td><td class="num">2</td><td>30 Ã— 26 mm</td><td>Fijan el frame al eje central.</td></tr>
+          <tr><td>Caja de la Raspberry y soporte de cÃ¡maras</td><td><span class="mat petg">PETG-HF</span></td><td class="num">2</td><td>95 Ã— 66 Ã— 34 mm</td><td>Con ventilaciÃ³n y protecciÃ³n de la lente.</td></tr>
+          <tr><td>Soportes de sensores</td><td><span class="mat petg">PETG-HF</span></td><td class="num">3</td><td>PequeÃ±os</td><td>Flujo Ã³ptico abajo y distancia al frente y arriba.</td></tr>
+        </tbody></table>
+    </div>
+  </section>
+
+  <section class="wrap block">
+    <div class="sec-head"><p class="eyebrow">Arquitectura</p><h2>QuiÃ©n controla quÃ©</h2>
+      <p class="lead">La controladora con ArduPilot mantiene estable el vuelo y el rodado. La Raspberry decide la misiÃ³n y arma el informe. Los dos conversan por MAVLink.</p></div>
+    <div class="table-scroll card arch-wrap">
+      <svg class="arch" viewBox="0 0 960 300" role="img" aria-label="Arquitectura de control de Orbe">
+        <g class="node"><rect x="20" y="30" width="190" height="56" rx="6"/><text x="115" y="54">Radio ELRS</text><text class="sub" x="115" y="72">piloto Â· modo manual</text></g>
+        <g class="node"><rect x="20" y="122" width="190" height="56" rx="6"/><text x="115" y="146">Flujo Ã³ptico + distancia</text><text class="sub" x="115" y="164">3901-L0X Â· 2 Ã— VL53L1X</text></g>
+        <g class="node"><rect x="20" y="214" width="190" height="56" rx="6"/><text x="115" y="238">GPS + brÃºjula</text><text class="sub" x="115" y="256">solo en exteriores</text></g>
+        <g class="node key"><rect x="330" y="110" width="220" height="80" rx="6"/><text x="440" y="142">Controladora F405</text><text class="sub" x="440" y="162">ArduPilot Â· estabilidad y modos</text><text class="sub" x="440" y="178">ESC 55A â†’ 4 motores</text></g>
+        <g class="node key"><rect x="660" y="110" width="220" height="80" rx="6"/><text x="770" y="142">Raspberry Pi 4</text><text class="sub" x="770" y="162">misiÃ³n, cÃ¡maras, informe</text><text class="sub" x="770" y="178">Camera Module 3 Â· MLX90640</text></g>
+        <g class="node"><rect x="660" y="228" width="220" height="52" rx="6"/><text x="770" y="250">Notebook en terreno</text><text class="sub" x="770" y="266">video, mapa tÃ©rmico, PDF</text></g>
+        <path class="wire" d="M210 58 H270 V130 H330"/><path class="wire" d="M210 150 H330"/><path class="wire" d="M210 242 H270 V170 H330"/>
+        <path class="wire" d="M550 150 H660"/><text class="proto" x="568" y="142">MAVLink Â· UART</text>
+        <path class="wire dash" d="M770 190 V228"/><text class="proto" x="780" y="214">WiFi</text>
+      </svg>
+    </div>
+  </section>
+
+  <section id="plan" class="wrap block">
+    <div class="sec-head"><p class="eyebrow">Hoja de ruta</p><h2>Diez semanas despuÃ©s de la mini planta</h2>
+      <p class="lead">Arranca cuando la mini planta estÃ© lista, en la semana del 18 de enero de 2027. Las fases 1 y 2 son las mismas del dron sin jaula, asÃ­ que el avance sirve aunque la jaula se atrase.</p></div>
+    <div class="table-scroll card">
+      <div class="gantt g10" role="table" aria-label="Plan por semana">
+        <div class="g-row g-head" role="row"><span role="columnheader">Actividad</span><span>18-01</span><span>25-01</span><span>01-02</span><span>08-02</span><span>15-02</span><span>22-02</span><span>01-03</span><span>08-03</span><span>15-03</span><span>22-03</span></div>
+        <div class="g-row" role="row"><span role="cell">Banco de empuje y elecciÃ³n de motores</span><i style="--s:1;--e:2"></i></div>
+        <div class="g-row" role="row"><span role="cell">Dron 7" volando en simulaciÃ³n y real</span><i style="--s:2;--e:4"></i></div>
+        <div class="g-row" role="row"><span role="cell">DiseÃ±o CAD de la jaula y pruebas de TPU</span><i style="--s:3;--e:5"></i></div>
+        <div class="g-row" role="row"><span role="cell">ImpresiÃ³n y armado de la jaula</span><i style="--s:5;--e:7"></i></div>
+        <div class="g-row" role="row"><span role="cell">Pruebas de caÃ­da con IMU</span><i style="--s:7;--e:8"></i></div>
+        <div class="g-row" role="row"><span role="cell">Rodar, trepar y techo con flujo Ã³ptico</span><i style="--s:7;--e:10"></i></div>
+        <div class="g-row" role="row"><span role="cell">Informe tÃ©rmico automÃ¡tico y demo</span><i class="ms" style="--s:10;--e:11"></i></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="bom" class="wrap block">
+    <div class="sec-head"><p class="eyebrow">Lista de materiales</p><h2>BOM de Orbe</h2>
+      <p class="lead">Precios revisados el 11-11-2026. ConversiÃ³n: USD 1 = $950 y EUR 1 = $1.100 CLP. Si el dron se compra igual, Orbe agrega solo las secciones "Jaula y sensores nuevos" e "ImpresiÃ³n".</p></div>
+    <div class="bom-bar">
+      <div class="seg" role="group" aria-label="Filtrar BOM">
+        <button type="button" data-bom="all" aria-pressed="true">Todo</button>
+        <button type="button" data-bom="reuse" aria-pressed="false">Del dron</button>
+        <button type="button" data-bom="new" aria-pressed="false">Jaula y sensores</button>
+        <button type="button" data-bom="print" aria-pressed="false">ImpresiÃ³n</button>
+      </div>
+      <span id="bomCount" class="muted"></span>
+    </div>
+    <div class="table-scroll card">
+      <table class="bom"><thead><tr><th>Ãtem</th><th class="num">Cant.</th><th>Precio de referencia</th><th>Estado</th><th class="num">CLP aprox.</th><th>Fuente</th></tr></thead><tbody id="bomBody"></tbody></table>
+    </div>
+    <dl class="totals">
+      <div><dt>Compras</dt><dd id="bomSum" class="mono">$0</dd></div>
+      <div><dt>IVA 19 % de lo importado</dt><dd id="bomIva" class="mono">$0</dd></div>
+      <div class="grand"><dt>Total estimado, sin envÃ­o</dt><dd id="bomTotal" class="mono">$0</dd></div>
+    </dl>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <p>Orbe Â· propuesta interna de Krontec Lab para la impresora Bambu Lab H2D. Pesos, consumos y desaceleraciones son estimaciones de diseÃ±o y se validan en el banco de pruebas. La imagen tÃ©rmica de la demo es simulada.</p>
+  <p>Inspirado en robots hÃ­bridos de investigaciÃ³n que combinan vuelo y rodado dentro de una jaula. Fuentes de precios: Palta FPV Store, Rotorama, rcdrone.top, Pyrodrone, RaceDayQuads, Waveshare, eBay, Melopero, RobotShop, 3D Printing USA y Bambu Lab EU.</p>
+</footer>
+<script type="module" src="assets/main.js"></script>
+</body>
+</html>

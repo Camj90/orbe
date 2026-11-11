@@ -1,0 +1,56 @@
+/* Agregados de Orbe sobre la base compartida con Mini Planta */
+.brand .b-st { stroke: var(--accent-ink); fill: none; }
+.btn.ghost { background: transparent; }
+@media (max-width: 860px) { .nav .btn.ghost { display: none; } }
+.chip-plain { font-size: .78rem; color: var(--fg); padding: 3px 9px; border-radius: 99px; background: var(--panel-2); border: 1px solid var(--line-2); }
+.kpis.k3 { grid-template-columns: 1fr 1fr; }
+.kpi b small { font-size: .8rem; color: var(--muted); }
+.flabel { font: 600 .68rem var(--mono); color: #10151a; background: var(--c); padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+.no-labels .flabel { display: inline-block; }
+
+.thermal-wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: stretch; }
+#thermal { width: 100%; aspect-ratio: 4 / 3; image-rendering: pixelated; border-radius: 8px; border: 1px solid var(--line-2); background: #000; display: block; }
+.t-scale { width: 14px; border-radius: 4px; background: linear-gradient(#fffff5, #ffeb78, #ffaa00, #eb5a1e, #be1e6e, #78008c, #28005a, #00000a); position: relative; }
+.t-scale span { position: absolute; right: 18px; font: 10px var(--mono); color: var(--muted); white-space: nowrap; }
+.t-scale span:first-child { top: 0; } .t-scale span:last-child { bottom: 0; }
+
+.imp { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.imp div { background: var(--panel-2); border-radius: 8px; padding: 8px 10px; display: grid; gap: 2px; }
+.imp span { font-size: .72rem; color: var(--muted); }
+.imp b { font-size: 1.05rem; font-weight: 500; }
+#impCard.done .imp .good b { color: var(--ok); }
+#impCard.done .imp .bad b { color: var(--crit); }
+.ph.sub { font-size: .85rem; margin-top: 4px; }
+.log { min-width: 420px; }
+.log td { font-size: .8rem; }
+.log tr.hot td:nth-child(2) { color: var(--crit); }
+.log tr.warn td:nth-child(2) { color: var(--warn); }
+.log tr.ok td:nth-child(2) { color: var(--ok); }
+.trend .th.ok { stroke: var(--ok); } .trend .thl.ok { fill: var(--ok); }
+
+.modes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); }
+@media (max-width: 1100px) { .modes { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); } }
+.mode { padding: 20px; display: grid; gap: 8px; align-content: start; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 0 -1px -1px 0; }
+.mode .mono { font-size: .72rem; color: var(--accent); }
+.mode h3 { font-size: 1.3rem; }
+.mode p { font-size: .9rem; color: var(--muted); }
+.note.wide { max-width: 80ch; }
+
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 900px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.card.pad { padding: 20px; display: grid; gap: 14px; align-content: start; }
+.formula { font: 600 1.8rem var(--mono); color: var(--accent); letter-spacing: .02em; }
+.bars { display: grid; gap: 12px; }
+.bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; }
+.bar span { font-size: .85rem; grid-column: 1 / -1; }
+.bar i { height: 12px; border-radius: 4px; width: var(--w); min-width: 6px; display: block; }
+.bar i.ok { background: var(--ok); } .bar i.warn { background: var(--warn); } .bar i.crit { background: var(--crit); }
+.bar b { font-weight: 500; font-size: .9rem; }
+.layers3 { margin: 0; padding-left: 20px; display: grid; gap: 10px; }
+.layers3 li { display: grid; gap: 2px; }
+.layers3 span { font-size: .88rem; color: var(--muted); }
+.mat.pacf { background: color-mix(in srgb, #2fb3a6 22%, transparent); color: #2fb3a6; }
+.parts tr.total td { font-weight: 600; border-bottom: 0; }
+.gantt.g10 .g-row { grid-template-columns: 260px repeat(10, minmax(0, 1fr)); }
+.gantt.g10 { min-width: 900px; }
+.kind.loc { color: var(--ok); }
