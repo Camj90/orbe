@@ -1,52 +1,53 @@
-// Escena 3D de Orbe: dron de 7" dentro de una jaula rodante. Escala: 1 unidad = 10 cm.
+// Escena 3D de Orbe Mini: dron de 3" con ESP32 dentro de una jaula barril con domos. Escala: 1 unidad = 10 cm.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
-export const R = 2.3;            // radio exterior de la jaula (Ø 46 cm)
-export const HALF = 2.2;         // medio largo de la jaula (44 cm)
-export const ROOM = { WALL_Z: -8, CEIL_Y: 24 };
+export const R = 1.0;            // radio del anillo central (Ø 20 cm)
+export const R_END = 0.8;        // radio de los anillos de extremo (Ø 16 cm)
+export const HALF = 0.9;         // distancia del centro a cada anillo de extremo
+export const DOME = 0.35;        // cuánto sobresale cada domo (3,5 cm)
+export const APEX = HALF + DOME; // 1,25: altura del centro si queda parado sobre un domo
+export const ROOM = { WALL_Z: -4, CEIL_Y: 12 };
 export const TARGETS = [
-  { key: 'wall', pos: [4.4, 14, -7.55], temp: 78, name: 'Tablero en altura' },
-  { key: 'ceil', pos: [4.0, 23.3, 0.5], temp: 64, name: 'Empalme en bandeja de techo' }
+  { key: 'wall', pos: [2.2, 7, -3.65], temp: 78, name: 'Tablero en altura' },
+  { key: 'ceil', pos: [2.0, 11.45, 0.3], temp: 64, name: 'Empalme en bandeja de techo' }
 ];
 
 export const INFO = {
-  cage: { tag: 'JA-01', short: 'Jaula', name: 'Jaula rodante', desc: 'Cilindro de 46 cm de diámetro y 44 cm de largo. Gira libre alrededor del eje, así que el dron puede rodar, trepar y chocar sin que las hélices toquen nada.', print: 'Anillos en PAHT-CF, impresos en 6 segmentos de 60°. Banda de rodado en TPU 95A con relleno giroide. Largueros de tubo de carbono comprado.', func: 'Rodar, absorber golpes y proteger las hélices' },
-  drone: { tag: 'DR-07', short: 'Dron 7"', name: 'Dron de 7 pulgadas', desc: 'El mismo dron del BOM anterior: frame GEPRC Mark4, motores 2807 de 1300 KV, controladora SpeedyBee F405 con ArduPilot y batería 6S de Li-ion.', print: 'Soportes de cámara y abrazaderas del eje en PETG-HF.', func: 'Empuje para rodar, trepar y volar' },
-  pi: { tag: 'CC-01', short: 'Raspberry + cámaras', name: 'Raspberry Pi 4 y cámaras', desc: 'Computadora a bordo con Camera Module 3 y cámara térmica MLX90640. Arma el informe de inspección con fotos y temperaturas.', print: 'Caja ventilada en PETG-HF.', func: 'Inspección térmica y misiones autónomas' },
-  hub: { tag: 'AM-01', short: 'Amortiguadores', name: 'Eje y amortiguadores', desc: 'Eje de carbono de 10 mm sobre rodamientos 6800. Entre el eje y los rayos de cada anillo va un anillo de TPU que se deforma en un golpe.', print: 'Amortiguadores en TPU 95A. Rayos en PAHT-CF.', func: 'Aislar la electrónica del impacto' },
-  flow: { tag: 'OF-01', short: 'Flujo óptico', name: 'Flujo óptico y distancia', desc: 'Matek 3901-L0X bajo el dron y dos VL53L1X (frontal y superior). Permiten mantener la posición sin GPS y detectar muro y techo.', print: 'Soportes en PETG-HF.', func: 'Navegar dentro de una planta' },
-  wall: { tag: 'TB-07', short: 'Tablero 78 °C', name: 'Tablero eléctrico en altura', desc: 'Objetivo de la demo: un tablero a 1,4 m sobre el piso, con una conexión recalentada que el dron detecta al subir el muro.', print: '—', func: 'Punto de inspección' },
-  ceil: { tag: 'BT-03', short: 'Empalme 64 °C', name: 'Empalme en bandeja de techo', desc: 'Objetivo de la demo: un empalme caliente en la bandeja portacables del techo, a 2,4 m.', print: '—', func: 'Punto de inspección' }
+  cage: { tag: 'JA-01', short: 'Jaula barril', name: 'Jaula barril', desc: 'Anillo central de 20 cm y anillos de extremo de 16 cm unidos por 8 largueros de carbono. Gira libre alrededor del eje: el dron rueda, trepa y choca sin que las hélices toquen nada.', print: 'Cada anillo sale entero en la H2D (cabe en 32 cm). PAHT-CF para los anillos, TPU 95A para la banda de rodado.', func: 'Rodar, absorber golpes y proteger las hélices' },
+  dome: { tag: 'DM-01', short: 'Domos', name: 'Domos de autoadrizado', desc: 'Cuatro costillas curvas por lado con una punta de TPU. Sobresalen 3,5 cm con radio de 11 cm, menor al límite de 12 cm: si cae de punta no puede quedarse parado y vuelve solo a quedar de costado.', print: 'Costillas en PAHT-CF, puntas en TPU 95A.', func: 'Que nunca quede atrapado sobre un extremo' },
+  drone: { tag: 'DR-03', short: 'Dron 3"', name: 'Dron de 3 pulgadas', desc: 'Frame de carbono de 125 mm, motores 1404 de 3800 KV, ESC 4 en 1 de 20 A y batería 4S de 850 mAh. Pesa unos 230 g sin la jaula.', print: 'Abrazaderas del eje y soporte de batería en PETG-HF.', func: 'Empuje para rodar, trepar y volar' },
+  esp: { tag: 'FC-01', short: 'ESP32 de vuelo', name: 'ESP32 como controladora', desc: 'Tu ESP32 con el firmware ESP-FC (compatible con Betaflight) y un giroscopio MPU6500 por SPI. Hasta 4 kHz de lazo de control. Los modos rodar, trepar y techo son código propio.', print: 'Bandeja antivibración con gomas de TPU.', func: 'Estabilidad, motores y modos de movimiento' },
+  cam: { tag: 'PL-01', short: 'ESP32-S3 + térmica', name: 'XIAO ESP32-S3 Sense y MLX90640', desc: 'Segundo microcontrolador para la carga útil: cámara OV2640, cámara térmica de 32 × 24 y WiFi hacia la estación en tierra. Así el video no le quita tiempo al control de vuelo.', print: 'Carcasa frontal en PETG-HF con protector de lentes.', func: 'Inspección térmica, alarmas y video' },
+  hub: { tag: 'AM-01', short: 'Amortiguadores', name: 'Eje y amortiguadores', desc: 'Eje de carbono de 4 mm sobre rodamientos 684ZZ. Un anillo de TPU entre el eje y los rayos se comprime en un golpe.', print: 'Amortiguadores en TPU 95A, rayos en PAHT-CF.', func: 'Aislar la electrónica del impacto' },
+  flow: { tag: 'OF-01', short: 'Flujo óptico', name: 'Flujo óptico y distancia', desc: 'Matek 3901-L0X abajo y dos VL53L1X (frontal y superior). Le dicen al dron cuánto se movió y a qué distancia están el muro y el techo.', print: 'Soportes en PETG-HF.', func: 'Mantener posición sin GPS' },
+  wall: { tag: 'TB-07', short: 'Tablero', name: 'Tablero eléctrico en altura', desc: 'Objetivo de la demo: un tablero a 70 cm del piso. Con "Simular alza de temperatura" su conexión se calienta y Orbe va a revisarlo.', print: '—', func: 'Punto de inspección' },
+  ceil: { tag: 'BT-03', short: 'Empalme 64 °C', name: 'Empalme en bandeja de techo', desc: 'Objetivo de la demo: un empalme caliente en una bandeja portacables a 1,2 m.', print: '—', func: 'Punto de inspección' }
 };
 
 const VIEWS = {
-  iso:   { pos: [31, 9, 30], target: [1, 11, -2] },
-  side:  { pos: [36, 11, 2], target: [0, 11, -1] },
-  front: { pos: [2, 10, 34], target: [0, 10, -2] },
-  scale: { pos: [12.5, 8.5, 19.5], target: [0.8, 3.2, 5.6] },
-  cage:  { pos: [7.5, 5.5, 12.5], target: [0, 2.3, 6] }
+  iso:   { pos: [15, 6.5, 16], target: [0.3, 5, -0.5] },
+  side:  { pos: [-17, 5.5, 2.5], target: [0, 4.5, -1] },
+  front: { pos: [0.6, 5, 18], target: [0, 5, 0] },
+  scale: { pos: [4.6, 3.2, 7.8], target: [0.4, 1.1, 3] },
+  cage:  { pos: [3.4, 2.4, 6.4], target: [0, 1, 3] }
 };
 
 function layerTexture() {
   const c = document.createElement('canvas'); c.width = c.height = 64;
-  const g = c.getContext('2d');
-  g.fillStyle = '#808080'; g.fillRect(0, 0, 64, 64);
+  const g = c.getContext('2d'); g.fillStyle = '#808080'; g.fillRect(0, 0, 64, 64);
   for (let y = 0; y < 64; y += 4) { g.fillStyle = '#a8a8a8'; g.fillRect(0, y, 64, 2); g.fillStyle = '#6a6a6a'; g.fillRect(0, y + 2, 64, 1); }
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(8, 8);
-  return t;
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 6); return t;
 }
 function gyroidTexture() {
   const c = document.createElement('canvas'); c.width = 128; c.height = 32;
-  const g = c.getContext('2d');
-  g.fillStyle = '#1b1e21'; g.fillRect(0, 0, 128, 32);
-  g.strokeStyle = '#2c3136'; g.lineWidth = 3;
+  const g = c.getContext('2d'); g.fillStyle = '#1b1e21'; g.fillRect(0, 0, 128, 32);
+  g.strokeStyle = '#2f353a'; g.lineWidth = 3;
   for (let x = -16; x < 144; x += 16) { g.beginPath(); for (let y = 0; y <= 32; y += 2) g.lineTo(x + 5 * Math.sin(y / 32 * Math.PI * 2), y); g.stroke(); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 1);
-  return t;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(8, 1); return t;
 }
 
 export function createOrbe(container, opts = {}) {
@@ -60,41 +61,39 @@ export function createOrbe(container, opts = {}) {
   container.appendChild(labelRenderer.domElement);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 300);
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 200);
   camera.position.set(...VIEWS.iso.pos);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(...VIEWS.iso.target);
   controls.enableDamping = true; controls.dampingFactor = 0.08;
-  controls.minDistance = 4; controls.maxDistance = 70; controls.maxPolarAngle = Math.PI * 0.495;
+  controls.minDistance = 1.5; controls.maxDistance = 40; controls.maxPolarAngle = Math.PI * 0.495;
 
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   scene.add(new THREE.HemisphereLight(0xe6eeff, 0x1a2026, 0.5));
   const sun = new THREE.DirectionalLight(0xffffff, 1.9);
-  sun.position.set(18, 30, 22); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
-  Object.assign(sun.shadow.camera, { left: -26, right: 26, top: 26, bottom: -26, near: 1, far: 90 });
-  sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
+  sun.position.set(9, 16, 11); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 50 });
+  sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
   scene.add(sun);
-  const fill = new THREE.PointLight(0xfff1dd, 120, 40, 2); fill.position.set(2, 20, 4); scene.add(fill);
+  const fill = new THREE.PointLight(0xfff1dd, 40, 20, 2); fill.position.set(1, 10, 2); scene.add(fill);
 
   // ---------- materiales ----------
   const layers = layerTexture();
   const printed = (color, rough = 0.5) => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0, bumpMap: layers, bumpScale: 0.5 });
-  const gyro = gyroidTexture();
   const M = {
-    pacf: printed(0x2e3338, 0.62),
-    petgY: printed(0xf2b705),
-    petgG: printed(0x4b5661),
-    tpu: new THREE.MeshStandardMaterial({ map: gyro, roughness: 0.85 }),
+    pacf: printed(0x2e3338, 0.62), petgY: printed(0xf2b705), petgG: printed(0x4b5661),
+    tpu: new THREE.MeshStandardMaterial({ map: gyroidTexture(), roughness: 0.85 }),
     tpuDamp: new THREE.MeshStandardMaterial({ color: 0xff7a2f, roughness: 0.7 }),
     carbon: new THREE.MeshStandardMaterial({ color: 0x15181b, metalness: 0.35, roughness: 0.32 }),
     motor: new THREE.MeshStandardMaterial({ color: 0x7d8790, metalness: 0.85, roughness: 0.3 }),
-    bell: new THREE.MeshStandardMaterial({ color: 0xd14b2a, metalness: 0.6, roughness: 0.35 }),
-    prop: new THREE.MeshStandardMaterial({ color: 0x1d2a3a, roughness: 0.5, transparent: true, opacity: 0.95 }),
-    blur: new THREE.MeshBasicMaterial({ color: 0x9fb4c8, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }),
-    batt: new THREE.MeshStandardMaterial({ color: 0x1f4f8f, roughness: 0.45 }),
-    pcbG: new THREE.MeshStandardMaterial({ color: 0x1f7a4a, roughness: 0.45 }),
+    bell: new THREE.MeshStandardMaterial({ color: 0x2f6fd1, metalness: 0.6, roughness: 0.35 }),
+    prop: new THREE.MeshStandardMaterial({ color: 0xe8edf2, roughness: 0.4, transparent: true, opacity: 0.9 }),
+    blur: new THREE.MeshBasicMaterial({ color: 0xc9d6e2, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }),
+    batt: new THREE.MeshStandardMaterial({ color: 0x8a1f1f, roughness: 0.45 }),
     pcbB: new THREE.MeshStandardMaterial({ color: 0x1d3f7a, roughness: 0.45 }),
+    pcbK: new THREE.MeshStandardMaterial({ color: 0x15181c, roughness: 0.45 }),
+    pcbG: new THREE.MeshStandardMaterial({ color: 0x1f7a4a, roughness: 0.45 }),
     chip: new THREE.MeshStandardMaterial({ color: 0xc0c6cc, metalness: 0.9, roughness: 0.25 }),
     lens: new THREE.MeshStandardMaterial({ color: 0x0b0d10, metalness: 0.2, roughness: 0.05 }),
     floor: new THREE.MeshStandardMaterial({ color: 0x4a5057, roughness: 0.95 }),
@@ -105,12 +104,13 @@ export function createOrbe(container, opts = {}) {
     tray: new THREE.MeshStandardMaterial({ color: 0x9aa4ad, metalness: 0.8, roughness: 0.35 }),
     cable: new THREE.MeshStandardMaterial({ color: 0x22272b, roughness: 0.7 }),
     hot: new THREE.MeshStandardMaterial({ color: 0x552200, emissive: 0xff5a1f, emissiveIntensity: 0.6 }),
+    hotWall: new THREE.MeshStandardMaterial({ color: 0x552200, emissive: 0xff5a1f, emissiveIntensity: 0.3 }),
     crate: new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: 0.85 }),
     skin: new THREE.MeshStandardMaterial({ color: 0xd9a383, roughness: 0.62 }),
     sleeve: new THREE.MeshStandardMaterial({ color: 0x24415f, roughness: 0.85 })
   };
-  const CAT = new Map([[M.pacf, 'pacf'], [M.petgY, 'petg'], [M.petgG, 'petg'], [M.tpu, 'tpu'], [M.tpuDamp, 'tpu'],
-    [M.carbon, 'carbon'], [M.motor, 'buy'], [M.bell, 'buy'], [M.prop, 'buy'], [M.batt, 'buy'], [M.pcbG, 'buy'], [M.pcbB, 'buy'], [M.chip, 'buy'], [M.lens, 'buy']]);
+  const CAT = new Map([[M.pacf, 'pacf'], [M.petgY, 'petg'], [M.petgG, 'petg'], [M.tpu, 'tpu'], [M.tpuDamp, 'tpu'], [M.carbon, 'carbon'],
+    [M.motor, 'buy'], [M.bell, 'buy'], [M.prop, 'buy'], [M.batt, 'buy'], [M.pcbB, 'buy'], [M.pcbK, 'buy'], [M.pcbG, 'buy'], [M.chip, 'buy'], [M.lens, 'buy']]);
   const CAT_MAT = {
     pacf: new THREE.MeshStandardMaterial({ color: 0x2fb3a6, roughness: 0.55, bumpMap: layers, bumpScale: 0.5 }),
     petg: new THREE.MeshStandardMaterial({ color: 0xf2b705, roughness: 0.5, bumpMap: layers, bumpScale: 0.5 }),
@@ -124,11 +124,17 @@ export function createOrbe(container, opts = {}) {
   }
   const box = (w, h, d, mat, x, y, z, p) => mesh(new THREE.BoxGeometry(w, h, d), mat, x, y, z, p);
   const rbox = (w, h, d, r, mat, x, y, z, p) => mesh(new RoundedBoxGeometry(w, h, d, 3, r), mat, x, y, z, p);
-  const cyl = (r, h, mat, x, y, z, p, seg = 28) => mesh(new THREE.CylinderGeometry(r, r, h, seg), mat, x, y, z, p);
+  const cyl = (r, h, mat, x, y, z, p, seg = 24) => mesh(new THREE.CylinderGeometry(r, r, h, seg), mat, x, y, z, p);
   const cylX = (r, h, mat, x, y, z, p, seg) => { const m = cyl(r, h, mat, x, y, z, p, seg); m.rotation.z = Math.PI / 2; return m; };
+  function rod(a, b, r, mat, parent) {
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A);
+    const m = mesh(new THREE.CylinderGeometry(r, r, d.length(), 8), mat, 0, 0, 0, parent);
+    m.position.copy(A).add(B).multiplyScalar(0.5);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize());
+    return m;
+  }
 
-  const pickables = [];
-  const labels = {};
+  const pickables = [], labels = {};
   function tag(key, parent, pos) {
     const el = document.createElement('button'); el.type = 'button'; el.className = 'tag3d';
     el.innerHTML = `<b>${INFO[key].tag}</b><span>${INFO[key].short}</span>`;
@@ -137,130 +143,115 @@ export function createOrbe(container, opts = {}) {
   }
   function keyed(key, parent) { const g = new THREE.Group(); g.userData.key = key; parent.add(g); pickables.push(g); return g; }
 
-  // ---------- sala ----------
-  const floorBig = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x0e1418, roughness: 0.95 }));
+  // ---------- sala de pruebas ----------
+  const floorBig = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: 0x0e1418, roughness: 0.95 }));
   floorBig.rotation.x = -Math.PI / 2; floorBig.position.y = -0.02; floorBig.receiveShadow = true; scene.add(floorBig);
-  const grid = new THREE.GridHelper(200, 100, 0x26323b, 0x1a232a); grid.position.y = -0.01; scene.add(grid);
-  box(24, 0.2, 22, M.floor, 0, -0.1, 3);
+  const grid = new THREE.GridHelper(120, 120, 0x26323b, 0x1a232a); grid.position.y = -0.01; scene.add(grid);
   const { WALL_Z, CEIL_Y } = ROOM;
-  box(24, CEIL_Y + 1, 0.6, M.wall, 0, (CEIL_Y + 1) / 2, WALL_Z - 0.3);
-  for (let x = -10; x <= 10; x += 5) box(0.12, CEIL_Y, 0.06, M.seam, x, CEIL_Y / 2, WALL_Z + 0.02);
-  for (let y = 6; y < CEIL_Y; y += 6) box(24, 0.08, 0.06, M.seam, 0, y, WALL_Z + 0.02);
-  box(24, 1, 16.6, M.ceil, 0, CEIL_Y + 0.5, WALL_Z + 8);
-  [-11.6, 11.6].forEach(x => box(0.8, 1.6, 16.6, M.ceil, x, CEIL_Y - 0.8, WALL_Z + 8));
+  box(14, 0.1, 12, M.floor, 0, -0.05, 2);
+  box(12, CEIL_Y + 0.5, 0.3, M.wall, 0, (CEIL_Y + 0.5) / 2, WALL_Z - 0.15);
+  for (let x = -5; x <= 5; x += 2.5) box(0.06, CEIL_Y, 0.03, M.seam, x, CEIL_Y / 2, WALL_Z + 0.01);
+  for (let y = 3; y < CEIL_Y; y += 3) box(12, 0.04, 0.03, M.seam, 0, y, WALL_Z + 0.01);
+  box(12, 0.5, 8, M.ceil, 0, CEIL_Y + 0.25, WALL_Z + 4);
+  [-5.8, 5.8].forEach(x => box(0.4, 0.8, 8, M.ceil, x, CEIL_Y - 0.4, WALL_Z + 4));
 
-  // objetivos de inspección
   const wallT = keyed('wall', scene);
-  rbox(2.6, 3.2, 0.7, 0.05, M.cab, 4.4, 14, WALL_Z + 0.35, wallT);
-  box(2.2, 0.2, 0.2, M.cable, 4.4, 15.8, WALL_Z + 0.3, wallT);
-  box(0.2, 7, 0.2, M.cable, 5.2, 19.4, WALL_Z + 0.25, wallT);
-  const hot1 = mesh(new THREE.CircleGeometry(0.35, 20), M.hot, 4.0, 13.6, WALL_Z + 0.72, wallT);
-  tag('wall', scene, [4.4, 16.2, WALL_Z + 0.6]);
+  rbox(1.3, 1.6, 0.35, 0.03, M.cab, 2.2, 7, WALL_Z + 0.18, wallT);
+  box(0.12, 4.4, 0.1, M.cable, 2.6, 9.9, WALL_Z + 0.12, wallT);
+  mesh(new THREE.CircleGeometry(0.18, 20), M.hotWall, 2.0, 6.8, WALL_Z + 0.36, wallT);
+  const wallLamp = new THREE.PointLight(0xff4d2a, 0, 3, 2); wallLamp.position.set(2.0, 6.8, WALL_Z + 0.8); scene.add(wallLamp);
+  tag('wall', scene, [2.2, 8.1, WALL_Z + 0.3]);
   const ceilT = keyed('ceil', scene);
-  box(1.6, 0.12, 15, M.tray, 4.0, CEIL_Y - 1.2, WALL_Z + 8, ceilT);
-  [-0.8, 0.8].forEach(dx => box(0.06, 0.5, 15, M.tray, 4.0 + dx, CEIL_Y - 0.95, WALL_Z + 8, ceilT));
-  for (let z = WALL_Z + 1.5; z < WALL_Z + 15; z += 3) box(0.06, 1.0, 0.06, M.tray, 4.0, CEIL_Y - 0.5, z, ceilT);
-  [-0.4, 0, 0.4].forEach(dx => box(0.16, 0.16, 15, M.cable, 4.0 + dx, CEIL_Y - 1.05, WALL_Z + 8, ceilT));
-  const hot2 = rbox(0.5, 0.3, 0.7, 0.05, M.hot, 4.0, CEIL_Y - 1.0, 0.5, ceilT);
-  tag('ceil', scene, [4.0, CEIL_Y - 2.2, 0.5]);
-  // obstáculo para el vuelo
-  rbox(5, 4.5, 5, 0.08, M.crate, 6.5, 2.25, 0.5);
-  box(5.2, 0.4, 5.2, M.crate, 6.5, 0.2, 0.5);
+  box(0.8, 0.06, 7.6, M.tray, 2.0, CEIL_Y - 0.6, WALL_Z + 4, ceilT);
+  [-0.4, 0.4].forEach(dx => box(0.03, 0.25, 7.6, M.tray, 2.0 + dx, CEIL_Y - 0.48, WALL_Z + 4, ceilT));
+  for (let z = WALL_Z + 0.8; z < WALL_Z + 8; z += 1.6) box(0.03, 0.5, 0.03, M.tray, 2.0, CEIL_Y - 0.25, z, ceilT);
+  [-0.2, 0, 0.2].forEach(dx => box(0.08, 0.08, 7.6, M.cable, 2.0 + dx, CEIL_Y - 0.53, WALL_Z + 4, ceilT));
+  rbox(0.26, 0.16, 0.36, 0.03, M.hot, 2.0, CEIL_Y - 0.5, 0.3, ceilT);
+  tag('ceil', scene, [2.0, CEIL_Y - 1.1, 0.3]);
+  rbox(2, 2, 2, 0.05, M.crate, 3.2, 1.0, 0.5);
 
   // ---------- vehículo ----------
-  const veh = new THREE.Group(); scene.add(veh);
-  const cageWrap = new THREE.Group(); veh.add(cageWrap);       // escala para el aplastamiento
-  const cageRot = keyed('cage', cageWrap);                    // gira al rodar
-  const ringGeo = new THREE.TorusGeometry(R - 0.16, 0.07, 10, 72);
-  const treadGeo = new THREE.TorusGeometry(R - 0.1, 0.11, 12, 72);
-  [-HALF, HALF].forEach(x => {
-    const ring = mesh(ringGeo, M.pacf, x, 0, 0, cageRot); ring.rotation.y = Math.PI / 2;
-    const tread = mesh(treadGeo, M.tpu, x, 0, 0, cageRot); tread.rotation.y = Math.PI / 2;
-    for (let k = 0; k < 6; k++) {
-      const a = k * Math.PI / 3;
-      const s = box(0.06, R - 0.45, 0.1, M.pacf, x, 0, 0, cageRot);
-      s.position.set(x, Math.cos(a) * (R - 0.2) / 2 + 0.0, Math.sin(a) * (R - 0.2) / 2);
-      s.rotation.x = a;
-    }
-  });
+  const veh = new THREE.Group(); scene.add(veh);            // posición + vuelco (rotation.z)
+  const cageWrap = new THREE.Group(); veh.add(cageWrap);    // aplastamiento en impacto
+  const cageRot = keyed('cage', cageWrap);                  // giro al rodar
+  const ring = (rad, x, tube, mat) => { const m = mesh(new THREE.TorusGeometry(rad, tube, 10, 64), mat, x, 0, 0, cageRot); m.rotation.y = Math.PI / 2; return m; };
+  ring(R - 0.06, 0, 0.035, M.pacf); ring(R - 0.03, 0, 0.05, M.tpu);
+  [-HALF, HALF].forEach(x => { ring(R_END - 0.05, x, 0.03, M.pacf); ring(R_END - 0.02, x, 0.04, M.tpu); });
   for (let k = 0; k < 8; k++) {
-    const a = k * Math.PI / 4;
-    cylX(0.05, HALF * 2, M.carbon, 0, Math.cos(a) * (R - 0.16), Math.sin(a) * (R - 0.16), cageRot, 10);
+    const a = k * Math.PI / 4, c = Math.cos(a), s = Math.sin(a);
+    [-1, 1].forEach(sg => rod([sg * HALF, c * (R_END - 0.05), s * (R_END - 0.05)], [0, c * (R - 0.06), s * (R - 0.06)], 0.018, M.carbon, cageRot));
   }
-  // amortiguadores (no giran con la jaula visualmente, quedan en el eje)
-  const hubs = keyed('hub', veh);
-  [-HALF, HALF].forEach(x => {
-    const d = mesh(new THREE.TorusGeometry(0.28, 0.1, 10, 24), M.tpuDamp, x, 0, 0, hubs); d.rotation.y = Math.PI / 2;
-    cylX(0.17, 0.22, M.pacf, x, 0, 0, hubs);
+  [-HALF, HALF].forEach(x => { for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; rod([x, 0, 0], [x, Math.cos(a) * (R_END - 0.06), Math.sin(a) * (R_END - 0.06)], 0.014, M.pacf, cageRot); } });
+  // domos de autoadrizado: arcos de radio 1,1 (11 cm) centrados en el eje
+  const domes = keyed('dome', cageRot);
+  const RHO = 1.1, XC = APEX - RHO, PHI = Math.asin(R_END / RHO);
+  [-1, 1].forEach(sg => {
+    for (let k = 0; k < 4; k++) {
+      const a = k * Math.PI / 2 + Math.PI / 4, c = Math.cos(a), s = Math.sin(a);
+      const pts = []; for (let i = 0; i <= 16; i++) { const f = PHI * i / 16; const rr = RHO * Math.sin(f); pts.push(new THREE.Vector3(sg * (XC + RHO * Math.cos(f)), c * rr, s * rr)); }
+      mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.025, 6), M.pacf, 0, 0, 0, domes);
+    }
+    mesh(new THREE.SphereGeometry(0.07, 16, 12), M.tpuDamp, sg * (APEX - 0.04), 0, 0, domes);
   });
+  const hubs = keyed('hub', veh);
+  [-HALF, HALF].forEach(x => { const d = mesh(new THREE.TorusGeometry(0.11, 0.04, 10, 20), M.tpuDamp, x, 0, 0, hubs); d.rotation.y = Math.PI / 2; cylX(0.07, 0.09, M.pacf, x, 0, 0, hubs); });
 
-  // dron (gira alrededor del eje para orientar el empuje)
   const droneG = keyed('drone', veh);
-  cylX(0.05, HALF * 2 + 0.3, M.carbon, 0, 0, 0, droneG, 12);
-  [-0.55, 0.55].forEach(x => rbox(0.18, 0.3, 0.26, 0.04, M.petgY, x, 0.05, 0, droneG));
-  const armL = Math.hypot(1.04, 1.04) * 2;
-  [Math.PI / 4, -Math.PI / 4].forEach(a => { const arm = box(armL, 0.06, 0.16, M.carbon, 0, 0.2, 0, droneG); arm.rotation.y = a; });
-  box(0.95, 0.04, 0.95, M.carbon, 0, 0.2, 0, droneG);
-  box(0.95, 0.04, 0.95, M.carbon, 0, 0.62, 0, droneG);
-  [[-0.4, -0.4], [0.4, -0.4], [-0.4, 0.4], [0.4, 0.4]].forEach(([x, z]) => cyl(0.025, 0.4, M.chip, x, 0.41, z, droneG, 8));
-  box(0.36, 0.08, 0.36, M.pcbB, 0, 0.3, 0, droneG);
-  box(0.36, 0.06, 0.36, M.pcbK || M.pcbB, 0, 0.4, 0, droneG);
+  cylX(0.02, HALF * 2 + 0.1, M.carbon, 0, 0, 0, droneG, 10);
+  [-0.22, 0.22].forEach(x => rbox(0.08, 0.12, 0.12, 0.02, M.petgY, x, 0.03, 0, droneG));
+  const armL = Math.hypot(0.44, 0.44) * 2;
+  [Math.PI / 4, -Math.PI / 4].forEach(a => { const arm = box(armL, 0.03, 0.07, M.carbon, 0, 0.08, 0, droneG); arm.rotation.y = a; });
+  box(0.36, 0.025, 0.36, M.carbon, 0, 0.08, 0, droneG);
   const props = [];
-  [[1.04, 1.04, 1], [-1.04, -1.04, 1], [1.04, -1.04, -1], [-1.04, 1.04, -1]].forEach(([x, z, dir]) => {
-    cyl(0.17, 0.14, M.motor, x, 0.3, z, droneG);
-    cyl(0.175, 0.1, M.bell, x, 0.42, z, droneG);
-    const p = new THREE.Group(); p.position.set(x, 0.5, z); droneG.add(p);
-    const blade = rbox(0.89, 0.02, 0.16, 0.01, M.prop, 0, 0, 0, p); blade.rotation.y = 0.2;
-    const blade2 = rbox(0.89, 0.02, 0.16, 0.01, M.prop, 0, 0, 0, p); blade2.rotation.y = 0.2 + Math.PI * 2 / 3;
-    const blade3 = rbox(0.89, 0.02, 0.16, 0.01, M.prop, 0, 0, 0, p); blade3.rotation.y = 0.2 + Math.PI * 4 / 3;
-    [blade, blade2, blade3].forEach(b => { b.geometry.translate(0.445, 0, 0); });
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(0.89, 40), M.blur); disc.rotation.x = -Math.PI / 2; disc.position.y = 0.01; p.add(disc);
+  [[0.44, 0.44, 1], [-0.44, -0.44, 1], [0.44, -0.44, -1], [-0.44, 0.44, -1]].forEach(([x, z, dir]) => {
+    cyl(0.08, 0.06, M.motor, x, 0.12, z, droneG); cyl(0.085, 0.04, M.bell, x, 0.17, z, droneG);
+    const p = new THREE.Group(); p.position.set(x, 0.2, z); droneG.add(p);
+    for (let b = 0; b < 3; b++) { const bl = rbox(0.38, 0.01, 0.07, 0.004, M.prop, 0, 0, 0, p); bl.geometry.translate(0.19, 0, 0); bl.rotation.y = 0.2 + b * Math.PI * 2 / 3; }
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(0.38, 32), M.blur); disc.rotation.x = -Math.PI / 2; disc.position.y = 0.005; p.add(disc);
     props.push({ p, dir });
   });
-  // batería bajo el frame
-  rbox(0.75, 0.42, 1.26, 0.05, M.batt, 0, -0.18, 0, droneG);
-  // computadora y cámaras
-  const piG = keyed('pi', droneG);
-  rbox(0.95, 0.34, 0.66, 0.05, M.petgY, 0, 0.82, 0.05, piG);
-  for (let i = 0; i < 5; i++) box(0.7, 0.02, 0.04, M.petgG, 0, 0.995, -0.18 + i * 0.1, piG);
-  rbox(0.32, 0.3, 0.2, 0.03, M.petgG, -0.25, 0.5, -0.62, piG);
-  const l1 = cyl(0.08, 0.06, M.lens, -0.25, 0.5, -0.74, piG); l1.rotation.x = Math.PI / 2;
-  rbox(0.32, 0.3, 0.2, 0.03, M.petgG, 0.25, 0.5, -0.62, piG);
-  const l2 = cyl(0.05, 0.06, M.lens, 0.25, 0.5, -0.74, piG); l2.rotation.x = Math.PI / 2;
-  cyl(0.02, 0.5, M.carbon, 0.35, 1.2, 0.3, droneG, 8);
-  cyl(0.24, 0.07, M.petgG, 0.35, 1.47, 0.3, droneG);
-  // flujo óptico y distancia
+  rbox(0.35, 0.14, 0.7, 0.03, M.batt, 0, -0.06, 0, droneG);
+  const espG = keyed('esp', droneG);
+  rbox(0.32, 0.03, 0.3, 0.01, M.petgY, 0, 0.14, 0, espG);
+  box(0.28, 0.02, 0.26, M.pcbK, 0, 0.165, 0, espG);
+  box(0.13, 0.02, 0.17, M.chip, -0.04, 0.18, 0.02, espG);
+  box(0.12, 0.012, 0.12, M.pcbB, 0.09, 0.18, -0.08, espG);
+  const camG = keyed('cam', droneG);
+  rbox(0.26, 0.2, 0.12, 0.02, M.petgG, 0, 0.12, -0.38, camG);
+  const lv = cyl(0.04, 0.03, M.lens, -0.06, 0.13, -0.45, camG); lv.rotation.x = Math.PI / 2;
+  const lt = cyl(0.03, 0.03, M.lens, 0.07, 0.13, -0.45, camG); lt.rotation.x = Math.PI / 2;
   const flowG = keyed('flow', droneG);
-  box(0.3, 0.04, 0.25, M.pcbB, 0, -0.42, 0.25, flowG);
-  box(0.08, 0.03, 0.08, M.lens, 0, -0.45, 0.25, flowG);
-  box(0.16, 0.12, 0.04, M.pcbG, 0, 0.25, -0.58, flowG);
-  box(0.16, 0.04, 0.16, M.pcbG, -0.3, 1.0, 0.3, flowG);
+  box(0.14, 0.02, 0.12, M.pcbB, 0, -0.15, 0.2, flowG); box(0.04, 0.015, 0.04, M.lens, 0, -0.165, 0.2, flowG);
+  box(0.08, 0.06, 0.02, M.pcbG, 0.12, 0.1, -0.4, flowG); box(0.08, 0.02, 0.08, M.pcbG, -0.12, 0.2, 0.18, flowG);
 
-  tag('cage', veh, [0, R + 0.5, 0]);
-  tag('drone', droneG, [1.35, 0.9, 1.0]);
-  tag('pi', droneG, [-0.9, 1.25, -0.2]);
-  tag('hub', veh, [HALF + 0.4, -0.7, 0]);
-  tag('flow', droneG, [0.2, -0.9, 0.7]);
+  tag('cage', veh, [0, R + 0.25, 0]);
+  tag('dome', cageWrap, [APEX + 0.15, 0.35, 0]);
+  tag('drone', droneG, [0.6, 0.35, 0.45]);
+  tag('esp', droneG, [-0.45, 0.42, 0.1]);
+  tag('cam', droneG, [0.2, 0.35, -0.65]);
+  tag('hub', veh, [-HALF - 0.1, -0.4, 0.2]);
+  tag('flow', droneG, [0.1, -0.4, 0.35]);
 
-  // vectores de fuerza
-  const forces = new THREE.Group(); forces.visible = false; scene.add(forces);
-  const thrustArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(), 4, 0xf2b705, 0.8, 0.45);
-  const weightArrow = new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(), 3.2, 0xb8c2cc, 0.7, 0.4);
-  const normalArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(), 2.6, 0x4ea8ff, 0.6, 0.35);
+  // fuerzas
+  const forces = new THREE.Group(); scene.add(forces);
+  const thrustArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(), 2, 0xf2b705, 0.35, 0.2);
+  const weightArrow = new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(), 1.4, 0xb8c2cc, 0.3, 0.18);
+  const normalArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(), 1.2, 0x4ea8ff, 0.3, 0.18);
   forces.add(thrustArrow, weightArrow, normalArrow);
   const fLabels = {};
   [['thrust', 'Empuje', '#f2b705'], ['weight', 'Peso', '#b8c2cc'], ['normal', 'Contacto', '#4ea8ff']].forEach(([k, t, c]) => {
     const el = document.createElement('div'); el.className = 'flabel'; el.textContent = t; el.style.setProperty('--c', c);
     const o = new CSS2DObject(el); forces.add(o); fLabels[k] = o;
   });
+  let forcesOn = false;
 
-  // mano de referencia
-  const handG = new THREE.Group(); scene.add(handG); handG.visible = false;
+  // mano de referencia (tamaño real, ~19 cm)
+  const handG = new THREE.Group(); scene.add(handG);
   const hand = new THREE.Group(); handG.add(hand);
   rbox(1.0, 0.3, 0.88, 0.13, M.skin, 0, 0, 0, hand);
   [-0.33, -0.11, 0.11, 0.32].forEach((z, i) => {
     const len = [0.42, 0.48, 0.46, 0.36][i];
-    const f = new THREE.Group(); f.position.set(-0.48, -0.02, z); f.rotation.z = 0.8; hand.add(f);
+    const f = new THREE.Group(); f.position.set(-0.48, -0.02, z); f.rotation.z = 0.85; hand.add(f);
     const p1 = mesh(new THREE.CapsuleGeometry(0.085, len, 6, 12), M.skin, -len / 2, 0, 0, f); p1.rotation.z = Math.PI / 2;
     const j = new THREE.Group(); j.position.set(-len, 0, 0); j.rotation.z = 0.9; f.add(j);
     const p2 = mesh(new THREE.CapsuleGeometry(0.078, len * 0.75, 6, 12), M.skin, -len * 0.37, 0, 0, j); p2.rotation.z = Math.PI / 2;
@@ -269,9 +260,9 @@ export function createOrbe(container, opts = {}) {
   const t1 = mesh(new THREE.CapsuleGeometry(0.1, 0.42, 6, 12), M.skin, -0.22, 0, 0, th); t1.rotation.z = Math.PI / 2;
   const arm = mesh(new THREE.CylinderGeometry(0.31, 0.36, 2.4, 24), M.skin, 1.65, 0.05, 0, hand); arm.rotation.z = Math.PI / 2;
   const cuff = mesh(new THREE.CylinderGeometry(0.42, 0.44, 1.6, 24), M.sleeve, 3.05, 0.05, 0, hand); cuff.rotation.z = Math.PI / 2;
-  hand.position.set(HALF + 0.55, 2 * R + 0.12, 6); hand.rotation.set(0, 0, 0.55);
+  hand.position.set(0.55, 2 * R + 0.2, 3); hand.rotation.set(0, 0, 0.5);
   const hEl = document.createElement('div'); hEl.className = 'dim3d'; hEl.textContent = 'Mano adulta ≈ 19 cm';
-  const hLab = new CSS2DObject(hEl); hLab.position.set(HALF + 1.6, 2 * R + 1.6, 6); handG.add(hLab);
+  const hLab = new CSS2DObject(hEl); hLab.position.set(1.8, 2 * R + 1.3, 3); handG.add(hLab);
 
   // cotas y volumen H2D
   const dims = new THREE.Group(); scene.add(dims);
@@ -283,21 +274,21 @@ export function createOrbe(container, opts = {}) {
     const el = document.createElement('div'); el.className = 'dim3d'; el.textContent = text;
     const o = new CSS2DObject(el); o.position.copy(A).add(B).multiplyScalar(0.5); dims.add(o);
   }
-  dimLine([-HALF - 0.6, 0, 6], [-HALF - 0.6, 2 * R, 6], 'Ø 46 cm', [0, 0, 0.2]);
-  dimLine([-HALF, 0.05, 6 + R + 0.6], [HALF, 0.05, 6 + R + 0.6], '44 cm', [0, 0, 0.2]);
-  dimLine([-13, 0, WALL_Z + 0.4], [-13, CEIL_Y, WALL_Z + 0.4], 'Techo a 2,4 m', [0.3, 0, 0]);
-  const vol = new THREE.Group(); dims.add(vol); vol.position.set(9.5, 1.625, 9.5);
+  dimLine([-APEX - 0.3, 0, 3], [-APEX - 0.3, 2 * R, 3], 'Ø 20 cm', [0, 0, 0.1]);
+  dimLine([-APEX, 0.02, 3 + R + 0.35], [APEX, 0.02, 3 + R + 0.35], '25 cm con domos', [0, 0, 0.1]);
+  dimLine([-6.4, 0, WALL_Z + 0.2], [-6.4, CEIL_Y, WALL_Z + 0.2], 'Techo de prueba a 1,2 m', [0.15, 0, 0]);
+  const vol = new THREE.Group(); dims.add(vol); vol.position.set(4.6, 1.625, 5.2);
   const vg = new THREE.BoxGeometry(3.25, 3.25, 3.2);
   vol.add(new THREE.Mesh(vg, new THREE.MeshBasicMaterial({ color: 0xf2b705, transparent: true, opacity: 0.06, depthWrite: false })));
   const ve = new THREE.LineSegments(new THREE.EdgesGeometry(vg), new THREE.LineDashedMaterial({ color: 0xf2b705, dashSize: 0.15, gapSize: 0.1 }));
   ve.computeLineDistances(); vol.add(ve);
-  const seg = mesh(new THREE.TorusGeometry(R - 0.16, 0.07, 10, 24, Math.PI / 3), M.pacf, -0.3, -1.6 + 0.07, -1.1, vol);
-  seg.rotation.x = -Math.PI / 2;
-  const segT = mesh(new THREE.TorusGeometry(R - 0.1, 0.11, 10, 24, Math.PI / 3), M.tpu, -0.3, -1.6 + 0.4, -1.1, vol);
-  segT.rotation.x = -Math.PI / 2;
-  const vEl = document.createElement('div'); vEl.className = 'dim3d vol'; vEl.textContent = 'H2D 32 × 32 × 32 cm · 1 segmento de anillo';
+  const r1 = mesh(new THREE.TorusGeometry(R - 0.06, 0.035, 10, 64), M.pacf, 0, -1.58, 0, vol); r1.rotation.x = -Math.PI / 2;
+  const r2 = mesh(new THREE.TorusGeometry(R - 0.03, 0.05, 10, 64), M.tpu, 0, -1.45, 0, vol); r2.rotation.x = -Math.PI / 2;
+  const vEl = document.createElement('div'); vEl.className = 'dim3d vol'; vEl.textContent = 'H2D 32 × 32 × 32 cm · el anillo de 20 cm sale entero';
   const vLab = new CSS2DObject(vEl); vLab.position.set(0, 1.9, 0); vol.add(vLab);
-  dims.traverse(o => { o.visible = false; });
+
+  const setVis = (g, on) => g.traverse(o => { o.visible = on; });
+  setVis(dims, false); setVis(handG, false); setVis(forces, false);
 
   // ---------- selección y cámara ----------
   const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
@@ -306,10 +297,9 @@ export function createOrbe(container, opts = {}) {
     const r = renderer.domElement.getBoundingClientRect();
     ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ptr, camera);
-    const hit = ray.intersectObjects(pickables, true)[0];
+    const hit = ray.intersectObjects(pickables, true).find(h => h.object.visible);
     if (!hit) return null;
-    let o = hit.object; while (o && !o.userData.key) o = o.parent;
-    return o ? o.userData.key : null;
+    let o = hit.object; while (o && !o.userData.key) o = o.parent; return o ? o.userData.key : null;
   }
   renderer.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
   renderer.domElement.addEventListener('pointerup', e => {
@@ -325,7 +315,7 @@ export function createOrbe(container, opts = {}) {
   function flyTo(pos, target) { tween = { p0: camera.position.clone(), t0: controls.target.clone(), p1: new THREE.Vector3(...pos), t1: new THREE.Vector3(...target), k: 0 }; }
   function setView(name) {
     follow = name === 'follow';
-    if (follow) { const p = veh.position; flyTo([p.x + 12, p.y + 6, p.z + 14], [p.x, p.y, p.z]); return; }
+    if (follow) { const p = veh.position; flyTo([p.x + 4.5, p.y + 2.5, p.z + 5.5], [p.x, p.y, p.z]); return; }
     const v = VIEWS[name]; if (v) flyTo(v.pos, v.target);
   }
 
@@ -340,46 +330,49 @@ export function createOrbe(container, opts = {}) {
     if (!on) originals.clear();
   }
   function setLabels(on) { container.classList.toggle('no-labels', !on); }
-  function setDims(on) { dims.traverse(o => { o.visible = on; }); }
-  function setHand(on) { handG.traverse(o => { o.visible = on; }); }
-  setHand(false);
-  function setForcesVisible(on) { forces.traverse(o => { o.visible = on; }); }
-  setForcesVisible(false);
-  function setTheme(dark) {
-    floorBig.material.color.set(dark ? 0x0e1418 : 0xd9dee2);
-    grid.material.color && grid.material.color.set(dark ? 0x1d2830 : 0xbcc5cc);
+  function setDims(on) { setVis(dims, on); }
+  function setHand(on) { setVis(handG, on); }
+  function setForces(on) { forcesOn = on; setVis(forces, on); }
+  function setDomes(on) { setVis(domes, on); labels.dome.visible = on; }
+  function setTheme(dark) { floorBig.material.color.set(dark ? 0x0e1418 : 0xd9dee2); grid.material.color && grid.material.color.set(dark ? 0x1d2830 : 0xbcc5cc); }
+  function setHot(level) { M.hot.emissiveIntensity = 0.4 + level; }
+  // temperatura del tablero: 25 °C apagado, 110 °C al rojo
+  function setWallTemp(t, alarmOn) {
+    const k = Math.max(0, Math.min(1, (t - 30) / 80));
+    M.hotWall.emissiveIntensity = 0.05 + k * 3.2;
+    wallLamp.intensity = k * 6;
+    labels.wall.element.querySelector('span').textContent = `Tablero ${Math.round(t)} °C`;
+    labels.wall.element.classList.toggle('alarm', !!alarmOn);
   }
 
-  // ---------- estado ----------
-  const up = new THREE.Vector3();
+  // ---------- pose ----------
+  const up = new THREE.Vector3(), q = new THREE.Quaternion();
   function setPose(s) {
     veh.position.set(...s.pos);
+    veh.rotation.z = s.tip || 0;
     droneG.rotation.x = s.tilt;
     cageRot.rotation.x = s.cageRot;
-    const q = s.squash || 0;
-    cageWrap.scale.set(1 + q * 0.35, 1 - q, 1 + q * 0.35);
-    cageWrap.position.y = -q * R;
-    // fuerzas
-    up.set(0, Math.cos(s.tilt), Math.sin(s.tilt));
-    const c = veh.position;
-    thrustArrow.position.copy(c); thrustArrow.setDirection(up); thrustArrow.setLength(Math.max(0.6, 4 * s.thrust), 0.8, 0.45);
-    thrustArrow.visible = forces.visible && s.thrust > 0.02;
+    const sq = s.squash || 0;
+    cageWrap.scale.set(1 + sq * 0.35, 1 - sq, 1 + sq * 0.35);
+    veh.updateMatrixWorld(true);
+    droneG.getWorldQuaternion(q); up.set(0, 1, 0).applyQuaternion(q);
+    const c = veh.position, len = Math.max(0.3, 2 * s.thrust);
+    thrustArrow.position.copy(c); thrustArrow.setDirection(up); thrustArrow.setLength(len, 0.35, 0.2);
     weightArrow.position.copy(c);
     let n = null, cp = null;
     if (s.contact === 'Suelo') { n = [0, 1, 0]; cp = [c.x, 0, c.z]; }
     else if (s.contact === 'Muro') { n = [0, 0, 1]; cp = [c.x, c.y, ROOM.WALL_Z]; }
     else if (s.contact === 'Techo') { n = [0, -1, 0]; cp = [c.x, ROOM.CEIL_Y, c.z]; }
-    normalArrow.visible = forces.visible && !!n;
     if (n) { normalArrow.setDirection(new THREE.Vector3(...n)); normalArrow.position.set(...cp); }
-    fLabels.thrust.position.copy(c).addScaledVector(up, Math.max(0.6, 4 * s.thrust) + 0.4);
-    fLabels.weight.position.copy(c).add(new THREE.Vector3(0, -3.6, 0));
-    if (n) fLabels.normal.position.set(cp[0] + n[0] * 2.9, cp[1] + n[1] * 2.9, cp[2] + n[2] * 2.9);
-    fLabels.thrust.visible = thrustArrow.visible; fLabels.normal.visible = normalArrow.visible; fLabels.weight.visible = forces.visible;
+    fLabels.thrust.position.copy(c).addScaledVector(up, len + 0.2);
+    fLabels.weight.position.copy(c).add(new THREE.Vector3(0, -1.6, 0));
+    if (n) fLabels.normal.position.set(cp[0] + n[0] * 1.35, cp[1] + n[1] * 1.35, cp[2] + n[2] * 1.35);
+    const tv = forcesOn && s.thrust > 0.02, nv = forcesOn && !!n;
+    thrustArrow.visible = tv; fLabels.thrust.visible = tv; normalArrow.visible = nv; fLabels.normal.visible = nv;
+    weightArrow.visible = forcesOn; fLabels.weight.visible = forcesOn;
   }
   let propSpeed = 0;
-  function setProps(v) { propSpeed = v; M.blur.opacity = Math.min(0.35, v * 0.35); M.prop.opacity = 1 - Math.min(0.75, v * 0.75); }
-  function setForces(on) { forces.visible = on; setForcesVisible(on); }
-  function setHot(level) { M.hot.emissiveIntensity = 0.4 + level; }
+  function setProps(v) { propSpeed = v; M.blur.opacity = Math.min(0.35, v * 0.35); M.prop.opacity = 0.9 - Math.min(0.7, v * 0.7); }
 
   function resize() {
     const w = container.clientWidth, h = container.clientHeight; if (!w || !h) return;
@@ -389,19 +382,16 @@ export function createOrbe(container, opts = {}) {
 
   const lastVeh = new THREE.Vector3();
   function frame(dt) {
-    props.forEach(({ p, dir }) => { p.rotation.y += dir * propSpeed * dt * 60; });
+    props.forEach(({ p, dir }) => { p.rotation.y += dir * propSpeed * dt * 70; });
     if (tween) {
       tween.k = Math.min(1, tween.k + dt / 0.9); const e = ease(tween.k);
       camera.position.lerpVectors(tween.p0, tween.p1, e); controls.target.lerpVectors(tween.t0, tween.t1, e);
       if (tween.k >= 1) tween = null;
-    } else if (follow) {
-      const d = veh.position.clone().sub(lastVeh);
-      camera.position.add(d); controls.target.add(d);
-    }
+    } else if (follow) { const d = veh.position.clone().sub(lastVeh); camera.position.add(d); controls.target.add(d); }
     lastVeh.copy(veh.position);
     controls.update();
     renderer.render(scene, camera); labelRenderer.render(scene, camera);
   }
 
-  return { frame, setPose, setProps, setForces, setView, setLabels, setDims, setHand, setMaterialMode, setTheme, setHot, select };
+  return { frame, setPose, setProps, setForces, setView, setLabels, setDims, setHand, setDomes, setMaterialMode, setTheme, setHot, setWallTemp, select };
 }

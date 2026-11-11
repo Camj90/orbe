@@ -54,3 +54,54 @@
 .gantt.g10 .g-row { grid-template-columns: 260px repeat(10, minmax(0, 1fr)); }
 .gantt.g10 { min-width: 900px; }
 .kind.loc { color: var(--ok); }
+
+/* --- Orbe Mini: alarmas, domos y ESP32 --- */
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.scen button.hot-btn b { color: var(--crit); }
+.scen { max-height: none; }
+.kpi.bad b { color: var(--crit); }
+.toast { position: absolute; top: 62px; right: 12px; z-index: 5; width: min(380px, calc(100% - 24px)); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--panel) 94%, transparent); backdrop-filter: blur(12px); border: 1px solid var(--line-2); box-shadow: var(--shadow); }
+.toast b { font: 700 1rem var(--display); font-stretch: 112%; }
+.toast p { font-size: .84rem; color: var(--fg); margin: 2px 0 4px; }
+.toast .mono { font-size: .68rem; color: var(--muted); }
+.toast.warn { border-color: var(--warn); box-shadow: inset 4px 0 0 var(--warn), var(--shadow); }
+.toast.warn b { color: var(--warn); }
+.toast.crit { border-color: var(--crit); box-shadow: inset 4px 0 0 var(--crit), var(--shadow); animation: alarmPulse 1.2s infinite; }
+.toast.crit b { color: var(--crit); }
+@keyframes alarmPulse { 50% { box-shadow: inset 4px 0 0 var(--crit), 0 0 0 6px color-mix(in srgb, var(--crit) 25%, transparent); } }
+.tag3d.alarm { border-color: #ff4d4f; background: rgba(120, 12, 14, .88); animation: alarmPulse 1.2s infinite; }
+.tag3d.alarm b { background: #ff4d4f; color: #fff; }
+.alarms2 { min-width: 520px; }
+.alarms2 tr.empty td { color: var(--muted); text-align: center; padding: 18px; }
+.alarms2 .prio { font: 500 .7rem var(--mono); padding: 2px 7px; border-radius: 4px; }
+.alarms2 .lv-crit .prio { background: var(--crit); color: #fff; }
+.alarms2 .lv-warn .prio { background: var(--warn); color: #1a1000; }
+.alarms2 tr.st-enviada td:first-child { box-shadow: inset 3px 0 0 var(--crit); }
+.alarms2 tr.st-reconocida td, .alarms2 tr.st-normalizada td { color: var(--muted); }
+.alarms2 tr.st-normalizada td { opacity: .6; }
+.modes.m6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+@media (max-width: 1200px) { .modes.m6 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); } }
+.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); }
+@media (max-width: 900px) { .flow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+@media (max-width: 560px) { .flow { grid-template-columns: minmax(0, 1fr); } }
+.flow li { padding: 20px; display: grid; gap: 8px; align-content: start; border-right: 1px solid var(--line); position: relative; }
+.flow li:last-child { border-right: 0; }
+.flow li:not(:last-child)::after { content: "→"; position: absolute; right: -9px; top: 18px; color: var(--accent); background: var(--panel); font-weight: 700; z-index: 1; }
+.flow .mono { font-size: .7rem; color: var(--accent); }
+.flow b { font: 700 1.15rem var(--display); font-stretch: 112%; }
+.flow p { font-size: .9rem; color: var(--muted); }
+.kv.big { font-size: .95rem; gap: 8px; }
+.vs { display: grid; gap: 10px; }
+.vs div { border-radius: 10px; padding: 12px 14px; background: var(--panel-2); display: grid; gap: 4px; }
+.vs .ok { box-shadow: inset 3px 0 0 var(--ok); } .vs .ok b { color: var(--ok); }
+.vs .bad { box-shadow: inset 3px 0 0 var(--crit); } .vs .bad b { color: var(--crit); }
+.vs p { font-size: .88rem; color: var(--muted); }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: .9rem; color: var(--muted); }
+#alarmPanel .trend { margin-top: 4px; }
+#demo .scen { grid-template-columns: 1fr 1fr; }
+#demo .scen button.hot-btn { grid-column: 1 / -1; }
+#demo .viewport { height: 100%; min-height: 660px; }
+#demo .hmi-bottom.b3 { grid-template-columns: minmax(260px, .8fr) minmax(0, 1.1fr) minmax(0, 1.1fr); }
+@media (max-width: 1200px) { #demo .hmi-bottom.b3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } #thermalPanel { grid-column: 1 / -1; } }
+@media (max-width: 1000px) { #demo .hmi-bottom.b3 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1100px) { #demo .viewport { height: 560px; min-height: 0; } }

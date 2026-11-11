@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Orbe Dron Rodante</title>
-<meta name="description" content="Orbe: dron de 7 pulgadas dentro de una jaula rodante impresa en la Bambu Lab H2D. Rueda, sube muros, recorre techos, vuela y amortigua caídas. Demo 3D interactiva, funciones, presupuesto de peso y energía, y BOM.">
+<meta name="description" content="Orbe: dron de 3 pulgadas con ESP32 dentro de una jaula barril de 20 cm impresa en la Bambu Lab H2D. Rueda, sube muros, recorre techos, vuela, se endereza solo si cae de lado y avisa alzas de temperatura. Demo 3D interactiva y BOM.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -26,7 +26,7 @@
       <span>Orbe</span><em>Krontec Lab</em>
     </a>
     <nav class="links" aria-label="Secciones">
-      <a href="#demo">Demo 3D</a><a href="#modos">Funciones</a><a href="#caida">Caídas</a><a href="#energia">Peso y energía</a><a href="#piezas">Piezas</a><a href="#bom">BOM</a>
+      <a href="#demo">Demo 3D</a><a href="#modos">Funciones</a><a href="#alarmas">Alarmas</a><a href="#lado">Si cae de lado</a><a href="#esp32">ESP32</a><a href="#bom">BOM</a>
     </nav>
     <a class="btn sm ghost" href="https://camj90.github.io/mini-planta/">Mini Planta ↗</a>
     <button id="themeBtn" class="icon-btn" type="button" aria-label="Cambiar tema claro u oscuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
@@ -37,15 +37,15 @@
   <section class="hero wrap">
     <div class="hero-text">
       <p class="eyebrow">Propuesta · Proyecto Bambu Lab H2D · noviembre 2026</p>
-      <h1>Un dron que rueda, sube muros y camina por el techo</h1>
-      <p class="lead">Orbe es el dron de inspección dentro de una <strong>jaula rodante impresa</strong>. En el suelo rueda gastando poco. Frente a un muro gira el empuje y lo sube. En el techo se aprieta contra él y lo recorre. Si cae, la jaula de TPU absorbe el golpe y las hélices nunca tocan nada.</p>
+      <h1>Un dron de 20 cm que rueda, sube muros y camina por el techo</h1>
+      <p class="lead">Orbe es un dron de 3" controlado por una <strong>ESP32</strong>, dentro de una <strong>jaula barril impresa</strong>. Rueda gastando poco, trepa muros, recorre techos, se endereza solo si cae de lado y avisa a mantención cuando un tablero se calienta.</p>
       <div class="cta"><a class="btn primary" href="#demo">Probar la demo 3D</a><a class="btn" href="#bom">Ver lista de materiales</a></div>
     </div>
     <dl class="stats">
-      <div><dt>Jaula</dt><dd>Ø 46 <small>cm × 44 cm de largo</small></dd></div>
-      <div><dt>Peso estimado</dt><dd>≈ 1,8 <small>kg con batería</small></dd></div>
-      <div><dt>Autonomía</dt><dd>1 h 45 <small>rodando · 16 min volando</small></dd></div>
-      <div><dt>Inversión</dt><dd>+ $256 mil <small>sobre el dron · ≈ $990 mil en total</small></dd></div>
+      <div><dt>Jaula</dt><dd>Ø 20 <small>cm × 25 cm con domos</small></dd></div>
+      <div><dt>Peso estimado</dt><dd>≈ 330 <small>gramos con batería</small></dd></div>
+      <div><dt>Autonomía</dt><dd>≈ 60 min <small>rodando · ≈ 9 min volando</small></dd></div>
+      <div><dt>Inversión</dt><dd>≈ $670 mil <small>CLP con IVA, sin envío</small></dd></div>
     </dl>
   </section>
 
@@ -69,6 +69,7 @@
             </div>
             <div class="seg">
               <button type="button" id="tLabels" aria-pressed="true">Etiquetas</button>
+              <button type="button" id="tDomes" aria-pressed="true">Domos</button>
               <button type="button" id="tForces" aria-pressed="false">Fuerzas</button>
               <button type="button" id="tDims" aria-pressed="false">Cotas</button>
               <button type="button" id="tMat" aria-pressed="false">Por material</button>
@@ -80,8 +81,12 @@
             <span><i style="--c:#2fb3a6"></i>PAHT-CF impreso</span>
             <span><i style="--c:#f2b705"></i>PETG-HF impreso</span>
             <span><i style="--c:#ff6b35"></i>TPU 95A impreso</span>
-            <span><i style="--c:#8792a0"></i>Tubo de carbono</span>
+            <span><i style="--c:#8792a0"></i>Carbono comprado</span>
             <span><i style="--c:#3f8fe0"></i>Electrónica comprada</span>
+          </div>
+          <div class="toast" id="alarmToast" role="alert" hidden>
+            <div><b id="toastTitle">Alarma</b><p id="toastText"></p><span class="mono">Canal: MQTT → panel de mantención · simulado</span></div>
+            <button type="button" id="toastAck" class="btn sm">Reconocer</button>
           </div>
           <p class="vp-hint">Arrastra para girar · rueda o pellizco para acercar · clic en una pieza para ver su ficha</p>
           <article class="info-card" id="infoCard" hidden>
@@ -96,11 +101,13 @@
           <div class="panel">
             <h3 class="ph">Escenario</h3>
             <div class="scen">
-              <button type="button" data-scen="suelo" aria-pressed="false"><b>Rodar</b><span>Suelo, ~50 W</span></button>
-              <button type="button" data-scen="muro" aria-pressed="false"><b>Subir el muro</b><span>Inspecciona un tablero a 1,4 m</span></button>
+              <button type="button" data-scen="suelo" aria-pressed="false"><b>Rodar</b><span>Suelo, ~10 W</span></button>
+              <button type="button" data-scen="muro" aria-pressed="false"><b>Subir el muro</b><span>Revisa el tablero a 70 cm</span></button>
               <button type="button" data-scen="techo" aria-pressed="false"><b>Recorrer el techo</b><span>Muro → techo → aterrizaje</span></button>
               <button type="button" data-scen="volar" aria-pressed="false"><b>Volar</b><span>Pasa sobre un obstáculo</span></button>
               <button type="button" data-scen="caida" aria-pressed="false"><b>Prueba de caída</b><span>1,5 m con motores apagados</span></button>
+              <button type="button" data-scen="lado" aria-pressed="false"><b>Cae de lado</b><span>Con domos se endereza solo</span></button>
+              <button type="button" data-scen="alza" aria-pressed="false" class="hot-btn"><b>Alza de temperatura</b><span>TB-07 se calienta y envía alarma</span></button>
             </div>
             <div class="watch"><span class="lbl">Qué observar · <b id="watchTitle">En reposo</b></span><p id="watchText"></p></div>
           </div>
@@ -108,31 +115,34 @@
             <div class="kpi"><span>Consumo</span><b id="kPower">0 W</b></div>
             <div class="kpi"><span>Autonomía al ritmo actual</span><b id="kAuton">—</b></div>
             <div class="kpi"><span>Batería</span><b id="kBatt">100 %</b></div>
-            <div class="kpi"><span>Altura del centro</span><b id="kAlt">0,23 m</b></div>
+            <div class="kpi"><span>Altura del centro</span><b id="kAlt">0,10 m</b></div>
             <div class="kpi"><span>Velocidad</span><b id="kSpeed">0,00 m/s</b></div>
-            <div class="kpi"><span>Contacto</span><b id="kContact">Suelo</b></div>
-          </div>
-          <div class="panel">
-            <h3 class="ph">Cámara térmica <span id="tState" class="chip ok">Normal</span></h3>
-            <div class="thermal-wrap">
-              <canvas id="thermal" width="32" height="24" aria-label="Imagen térmica simulada de 32 por 24 píxeles"></canvas>
-              <div class="t-scale" aria-hidden="true"><span>82 °C</span><span>14 °C</span></div>
-            </div>
-            <dl class="kv"><div><dt>Máxima</dt><dd class="mono" id="tMax">23,0 °C</dd></div><div><dt>Objetivo</dt><dd id="tTarget">Sin punto caliente a la vista</dd></div></dl>
-            <p class="note">MLX90640 · 32 × 24 píxeles · 110°. Imagen simulada.</p>
+            <div class="kpi" id="kWallTile"><span>Tablero TB-07 (real)</span><b id="kWall">38 °C</b></div>
           </div>
         </aside>
       </div>
-      <div class="hmi-bottom">
-        <div class="panel">
-          <h3 class="ph">Consumo eléctrico <span class="ph-meta">último minuto · batería 6S Li-ion, 89 Wh útiles</span></h3>
+      <div class="hmi-bottom b3">
+        <div class="panel" id="thermalPanel">
+            <h3 class="ph">Cámara térmica <span id="tState" class="chip ok">Normal</span></h3>
+            <div class="thermal-wrap">
+              <canvas id="thermal" width="32" height="24" aria-label="Imagen térmica simulada de 32 por 24 píxeles"></canvas>
+              <div class="t-scale" aria-hidden="true"><span>106 °C</span><span>14 °C</span></div>
+            </div>
+            <dl class="kv"><div><dt>Máxima vista</dt><dd class="mono" id="tMax">23,0 °C</dd></div><div><dt>Objetivo</dt><dd id="tTarget">Sin punto caliente a la vista</dd></div></dl>
+            <div class="btn-row"><button type="button" id="heatBtn" class="btn sm primary">Simular alza de temperatura</button><button type="button" id="coolBtn" class="btn sm">Normalizar tablero</button></div>
+            <p class="note">MLX90640 · 32 × 24 píxeles · imagen simulada. Alerta sobre 60 °C, crítica sobre 85 °C.</p>
+        </div>
+        <div class="panel" id="alarmPanel">
+          <h3 class="ph">Alarmas enviadas <span id="alarmCount" class="ph-meta">0 activas</span><button id="ackBtn" type="button" class="btn sm" disabled>Reconocer</button></h3>
+          <div class="table-scroll"><table class="alarms2"><thead><tr><th>Hora</th><th>Nivel</th><th>Origen</th><th>Canal</th><th>Estado</th></tr></thead><tbody id="alarmBody"></tbody></table></div>
+          <h3 class="ph sub">Consumo eléctrico <span class="ph-meta">último minuto · batería 4S 850 mAh, 10 Wh útiles</span></h3>
           <svg id="trend" class="trend" viewBox="0 0 600 176" data-state="ok" role="img" aria-label="Consumo del último minuto">
             <defs><linearGradient id="tg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="tg-a"/><stop offset="1" class="tg-b"/></linearGradient></defs>
             <g class="grid"><line x1="44" x2="592" y1="152" y2="152"/><line x1="44" x2="592" y1="117" y2="117"/><line x1="44" x2="592" y1="82" y2="82"/><line x1="44" x2="592" y1="47" y2="47"/><line x1="44" x2="592" y1="12" y2="12"/></g>
-            <g class="ax"><text x="36" y="156">0</text><text x="36" y="121">100</text><text x="36" y="86">200</text><text x="36" y="51">300</text><text x="36" y="16">400 W</text>
+            <g class="ax"><text x="36" y="156">0</text><text x="36" y="121">20</text><text x="36" y="86">40</text><text x="36" y="51">60</text><text x="36" y="16">80 W</text>
               <text x="44" y="172" text-anchor="start">−60 s</text><text x="592" y="172" text-anchor="end">ahora</text></g>
-            <line class="th ok" x1="44" x2="592" y1="134.5" y2="134.5"/><text class="thl ok" x="588" y="130" text-anchor="end">Rodar 50 W</text>
-            <line class="th warn" x1="44" x2="592" y1="36.5" y2="36.5"/><text class="thl warn" x="588" y="32" text-anchor="end">Volar 330 W</text>
+            <line class="th ok" x1="44" x2="592" y1="134.5" y2="134.5"/><text class="thl ok" x="588" y="130" text-anchor="end">Rodar 10 W</text>
+            <line class="th warn" x1="44" x2="592" y1="38.3" y2="38.3"/><text class="thl warn" x="588" y="34" text-anchor="end">Volar 65 W</text>
             <path id="trendArea" class="area" d=""/><path id="trendLine" class="line" d=""/><circle id="trendDot" class="dot" r="4" cx="592" cy="152"/>
           </svg>
         </div>
@@ -153,132 +163,160 @@
   </section>
 
   <section id="modos" class="wrap block">
-    <div class="sec-head"><p class="eyebrow">Funciones</p><h2>Cinco formas de moverse</h2>
-      <p class="lead">El truco está en que el dron puede girar dentro de la jaula. Al cambiar hacia dónde apunta el empuje, pasa de rodar a trepar o a volar sin cambiar de hardware.</p></div>
-    <div class="modes">
-      <article class="mode"><span class="mono">≈ 50 W · 1 h 45</span><h3>Rodar</h3><p>Se inclina hacia adelante y empuja apenas para vencer la fricción. Es el modo para recorrer pasillos y salas largas.</p></article>
-      <article class="mode"><span class="mono">≈ 300 W · 18 min</span><h3>Subir muros</h3><p>Gira el empuje unos 60° hacia la pared. Una parte lo sostiene y otra lo aprieta contra el muro para que la jaula ruede hacia arriba con tracción.</p></article>
-      <article class="mode"><span class="mono">≈ 350 W · 15 min</span><h3>Recorrer techos</h3><p>Empuja hacia arriba más que su peso y queda apretado contra el techo. Puede inspeccionar bandejas, luminarias y cañerías de cerca y estable.</p></article>
-      <article class="mode"><span class="mono">≈ 330 W · 16 min</span><h3>Volar</h3><p>Despega para pasar obstáculos o cambiar de nivel. Con el flujo óptico mantiene la posición dentro de una planta, donde no hay GPS.</p></article>
-      <article class="mode"><span class="mono">35 mm de frenado</span><h3>Caer bien</h3><p>Si pierde el control o se corta la energía, la jaula toca primero. Banda de TPU, anillos flexibles y amortiguadores del eje frenan el golpe.</p></article>
+    <div class="sec-head"><p class="eyebrow">Funciones</p><h2>Seis formas de moverse</h2>
+      <p class="lead">El dron puede girar dentro de la jaula. Al cambiar hacia dónde apunta el empuje, pasa de rodar a trepar o a volar sin cambiar de hardware. Y si queda mal parado, la forma de la jaula lo endereza.</p></div>
+    <div class="modes m6">
+      <article class="mode"><span class="mono">≈ 10 W · 60 min</span><h3>Rodar</h3><p>Se inclina hacia adelante y empuja apenas para vencer la fricción. Es el modo para recorrer pasillos y salas.</p></article>
+      <article class="mode"><span class="mono">≈ 60 W · 10 min</span><h3>Subir muros</h3><p>Gira el empuje unos 60° hacia la pared. Una parte lo sostiene y otra lo aprieta contra el muro para rodar hacia arriba.</p></article>
+      <article class="mode"><span class="mono">≈ 70 W · 9 min</span><h3>Recorrer techos</h3><p>Empuja hacia arriba más que su peso y queda apretado contra el techo. Revisa bandejas y cañerías de cerca.</p></article>
+      <article class="mode"><span class="mono">≈ 65 W · 9 min</span><h3>Volar</h3><p>Despega para pasar obstáculos o cambiar de nivel. Con el flujo óptico mantiene la posición donde no hay GPS.</p></article>
+      <article class="mode"><span class="mono">20 mm de frenado</span><h3>Caer bien</h3><p>La jaula toca primero. Banda de TPU, anillo flexible y amortiguadores del eje frenan el golpe.</p></article>
+      <article class="mode"><span class="mono">0 W · por gravedad</span><h3>Enderezarse</h3><p>Si cae sobre un extremo, el domo no lo deja quedarse parado y vuelve solo a quedar de costado.</p></article>
     </div>
-    <p class="note wide">Consumos y autonomías estimados para 1,8 kg con una batería 6S de Li-ion de 89 Wh útiles. Hay que medirlos en el banco de empuje antes de prometerlos a un cliente.</p>
+    <p class="note wide">Consumos y autonomías estimados para 330 g con una batería 4S de 850 mAh (unos 10 Wh útiles). Se miden en el banco de empuje con el Arduino antes de prometerlos.</p>
   </section>
 
-  <section id="caida" class="wrap block">
-    <div class="sec-head"><p class="eyebrow">Amortiguación</p><h2>Por qué la jaula de TPU importa</h2>
-      <p class="lead">En una caída, lo que daña la electrónica es la desaceleración, y esa depende de en cuántos milímetros se frena el golpe. Si se frena en el doble de distancia, el golpe es la mitad.</p></div>
+  <section id="alarmas" class="wrap block">
+    <div class="sec-head"><p class="eyebrow">Alarmas</p><h2>Del punto caliente al aviso en segundos</h2>
+      <p class="lead">En la demo, <b>Alza de temperatura</b> calienta una conexión del tablero TB-07. Orbe sube, su cámara térmica lo mide y la ESP32-S3 envía la alarma a mantención con la temperatura, la foto térmica y la ubicación.</p></div>
+    <ol class="flow">
+      <li><span class="mono">MLX90640</span><b>Mide</b><p>La cámara térmica lee 768 puntos varias veces por segundo y busca el más caliente.</p></li>
+      <li><span class="mono">XIAO ESP32-S3</span><b>Decide</b><p>Compara con los umbrales: alerta sobre 60 °C y crítica sobre 85 °C. Ambos se configuran por equipo.</p></li>
+      <li><span class="mono">MQTT · WiFi</span><b>Avisa</b><p>Publica la alarma con foto y ubicación. La Raspberry en tierra la muestra y la reenvía por correo o mensajería.</p></li>
+      <li><span class="mono">Mantención</span><b>Reconoce</b><p>Alguien acusa recibo y, tras reparar, el valor vuelve a lo normal y la alarma queda cerrada.</p></li>
+    </ol>
+    <p class="note wide">Los umbrales absolutos son un punto de partida. En terreno conviene usar la diferencia de temperatura contra una fase o equipo de referencia, como se hace en termografía eléctrica.</p>
+  </section>
+
+  <section id="lado" class="wrap block">
+    <div class="sec-head"><p class="eyebrow">Si cae de lado</p><h2>Domos para que nunca quede atrapado</h2>
+      <p class="lead">Si la jaula cae sobre un extremo, el eje queda vertical y el dron solo puede empujar en horizontal. No despega, y antes de volcarse resbala. Con extremos curvos, esa posición deja de ser estable y la gravedad lo devuelve de costado.</p></div>
     <div class="split">
       <div class="card pad">
-        <p class="formula">a ≈ g · h / d</p>
-        <p class="muted">a: desaceleración media · h: altura de caída · d: distancia en que se frena. Para 1,5 m:</p>
-        <div class="bars" role="img" aria-label="Desaceleración según el recorrido de frenado">
-          <div class="bar"><span>Jaula rígida, 3 mm</span><i style="--w:100%" class="crit"></i><b class="mono">≈ 500 g</b></div>
-          <div class="bar"><span>Solo banda TPU, 15 mm</span><i style="--w:20%" class="warn"></i><b class="mono">≈ 100 g</b></div>
-          <div class="bar"><span>Banda + anillos + amortiguadores, 35 mm</span><i style="--w:8.6%" class="ok"></i><b class="mono">≈ 43 g</b></div>
-        </div>
+        <p class="formula">√(ρ² − r²) &lt; L/2</p>
+        <p class="muted">ρ: radio de curvatura del domo · r: radio del anillo de extremo (8 cm) · L/2: distancia del centro al anillo de extremo (9 cm).</p>
+        <dl class="kv big">
+          <div><dt>Radio máximo del domo</dt><dd class="mono">ρ &lt; 12,0 cm</dd></div>
+          <div><dt>Radio elegido</dt><dd class="mono">ρ = 11 cm</dd></div>
+          <div><dt>Cuánto sobresale cada domo</dt><dd class="mono">3,5 cm</dd></div>
+          <div><dt>Largo total</dt><dd class="mono">25 cm</dd></div>
+        </dl>
       </div>
       <div class="card pad">
-        <h3>Tres capas que se suman</h3>
-        <ol class="layers3">
-          <li><b>Banda de rodado en TPU 95A</b><span>Relleno giroide al 20 %. Se comprime unos 15 mm y da agarre en muro y techo.</span></li>
-          <li><b>Anillos de PAHT-CF</b><span>Rígidos para rodar, pero flexan unos 10 mm en un golpe sin romperse.</span></li>
-          <li><b>Amortiguadores del eje en TPU</b><span>Anillos entre el eje y los rayos. Aíslan el dron, la batería y la Raspberry unos 10 mm más.</span></li>
-        </ol>
-        <p class="note">Valores de diseño. Se validan dejando caer la jaula con una IMU registrando a 1 kHz.</p>
+        <h3>Con domos y sin domos</h3>
+        <div class="vs">
+          <div class="ok"><b>Con domos</b><p>Parado de punta, el centro de masa queda sobre un punto inestable. Rueda por el domo y termina de costado en menos de un segundo, sin gastar batería.</p></div>
+          <div class="bad"><b>Sin domos</b><p>Queda parado sobre el extremo plano. Para volcarse necesita empujar de lado más de 1,1 veces su peso, pero el roce del TPU con el piso aguanta 0,5 a 0,9 veces: resbala antes.</p></div>
+        </div>
+        <p class="note">Pruébalo en la demo: escenario <b>Cae de lado</b>, con el botón <b>Domos</b> encendido y apagado.</p>
       </div>
+    </div>
+  </section>
+
+  <section id="esp32" class="wrap block">
+    <div class="sec-head"><p class="eyebrow">Electrónica</p><h2>Dos ESP32 en vez de una Raspberry</h2>
+      <p class="lead">Para achicar el dron, la controladora es tu ESP32 con <a href="https://github.com/rtlopez/esp-fc" target="_blank" rel="noopener">ESP-FC</a>, un firmware compatible con Betaflight que llega a 4 kHz de lazo de control con un giroscopio por SPI. La cámara y las alarmas van en una segunda ESP32-S3, para que el video nunca le quite tiempo al control de vuelo.</p></div>
+    <div class="table-scroll card arch-wrap">
+      <svg class="arch" viewBox="0 0 960 320" role="img" aria-label="Arquitectura con dos ESP32">
+        <g class="node"><rect x="20" y="20" width="190" height="52" rx="6"/><text x="115" y="42">Radio ELRS</text><text class="sub" x="115" y="60">piloto · modo manual</text></g>
+        <g class="node"><rect x="20" y="96" width="190" height="52" rx="6"/><text x="115" y="118">MPU6500 por SPI</text><text class="sub" x="115" y="136">giroscopio y acelerómetro</text></g>
+        <g class="node"><rect x="20" y="172" width="190" height="52" rx="6"/><text x="115" y="194">Flujo óptico + distancia</text><text class="sub" x="115" y="212">3901-L0X · 2 × VL53L1X</text></g>
+        <g class="node"><rect x="20" y="248" width="190" height="52" rx="6"/><text x="115" y="270">ESC 4 en 1 → motores</text><text class="sub" x="115" y="288">DShot600 · 1404 3800 KV</text></g>
+        <g class="node key"><rect x="320" y="110" width="230" height="100" rx="6"/><text x="435" y="142">ESP32 de vuelo</text><text class="sub" x="435" y="162">ESP-FC · estabilidad a 4 kHz</text><text class="sub" x="435" y="180">modos rodar · muro · techo</text><text class="sub" x="435" y="198">(código propio)</text></g>
+        <g class="node key"><rect x="660" y="110" width="230" height="100" rx="6"/><text x="775" y="142">XIAO ESP32-S3 Sense</text><text class="sub" x="775" y="162">cámara OV2640 · MLX90640</text><text class="sub" x="775" y="180">umbrales y alarmas</text><text class="sub" x="775" y="198">WiFi · MQTT</text></g>
+        <g class="node"><rect x="660" y="248" width="230" height="52" rx="6"/><text x="775" y="270">Raspberry Pi 4 en tierra</text><text class="sub" x="775" y="288">video, alarmas, informe PDF</text></g>
+        <path class="wire" d="M210 46 H265 V135 H320"/><path class="wire" d="M210 122 H265 V150 H320"/><path class="wire" d="M210 198 H265 V170 H320"/><path class="wire" d="M210 274 H265 V190 H320"/>
+        <path class="wire" d="M550 160 H660"/><text class="proto" x="568" y="152">UART · MSP</text>
+        <path class="wire dash" d="M775 210 V248"/><text class="proto" x="785" y="234">WiFi</text>
+      </svg>
+    </div>
+    <div class="split">
+      <div class="card pad"><h3>Lo que gana</h3><ul class="plain">
+        <li>Jaula de 20 cm en vez de 46 cm, y unos 330 g en vez de 1,8 kg.</li>
+        <li>Cada anillo se imprime entero en la H2D, sin segmentos.</li>
+        <li>Usa la ESP32 que ya tienes. La Raspberry pasa a ser la estación en tierra y el Arduino el banco de empuje.</li>
+        <li>Unos $320 mil menos que la versión de 7".</li></ul></div>
+      <div class="card pad"><h3>Lo que hay que saber</h3><ul class="plain">
+        <li>ESP-FC es un proyecto aficionado, no ArduPilot. Vuela bien en modo manual y estabilizado, pero no trae mantener posición con flujo óptico ni misiones.</li>
+        <li>Los modos rodar, muro y techo, y el uso del flujo óptico, son firmware que hay que escribir y probar.</li>
+        <li>Menos batería: unos 9 minutos de vuelo. La misión tiene que rodar casi todo el tiempo.</li>
+        <li>Si el desarrollo se complica, el plan B es una controladora F405 pequeña con INAV, que sí trae flujo óptico.</li></ul></div>
     </div>
   </section>
 
   <section id="energia" class="wrap block">
-    <div class="sec-head"><p class="eyebrow">Peso y energía</p><h2>1,8 kg con empuje de sobra</h2>
-      <p class="lead">Cuatro motores 2807 con hélices de 7" en 6S dan unos 7 kg de empuje total, cerca de 4 veces el peso. Ese margen permite trepar y apretarse contra el techo.</p></div>
+    <div class="sec-head"><p class="eyebrow">Peso y energía</p><h2>330 g con empuje de sobra</h2>
+      <p class="lead">Cuatro motores 1404 con hélices de 3" en 4S dan alrededor de 1,5 kg de empuje total, unas 4,5 veces el peso. Ese margen permite trepar y apretarse contra el techo.</p></div>
     <div class="split">
       <div class="table-scroll card">
         <table class="parts"><thead><tr><th>Bloque</th><th class="num">Peso aprox.</th><th>Qué incluye</th></tr></thead>
           <tbody>
-            <tr><td>Batería</td><td class="num">600 g</td><td>6S 5000 mAh Li-ion</td></tr>
-            <tr><td>Dron 7"</td><td class="num">560 g</td><td>Frame, motores, controladora, hélices, receptor, GPS</td></tr>
-            <tr><td>Jaula</td><td class="num">450 g</td><td>Anillos, rayos, banda, tubos, eje, rodamientos</td></tr>
-            <tr><td>Inspección</td><td class="num">150 g</td><td>Raspberry Pi 4, cámaras, BEC, caja</td></tr>
-            <tr><td>Navegación</td><td class="num">25 g</td><td>Flujo óptico y sensores de distancia</td></tr>
-            <tr class="total"><td>Total</td><td class="num">≈ 1,8 kg</td><td>Empuje ≈ 7 kg · relación ≈ 4:1</td></tr>
+            <tr><td>Batería</td><td class="num">100 g</td><td>4S 850 mAh LiPo</td></tr>
+            <tr><td>Dron 3"</td><td class="num">95 g</td><td>Frame, motores, ESC, hélices, receptor</td></tr>
+            <tr><td>Jaula</td><td class="num">95 g</td><td>Anillos, domos, banda, largueros, eje, rodamientos</td></tr>
+            <tr><td>Electrónica</td><td class="num">25 g</td><td>2 ESP32, giroscopio, cámaras, sensores, BEC</td></tr>
+            <tr><td>Cables y tornillos</td><td class="num">15 g</td><td></td></tr>
+            <tr class="total"><td>Total</td><td class="num">≈ 330 g</td><td>Empuje ≈ 1,5 kg · relación ≈ 4,5:1</td></tr>
           </tbody></table>
       </div>
       <div class="card pad">
         <h3>Autonomía por modo</h3>
         <div class="bars" role="img" aria-label="Autonomía estimada por modo en minutos">
-          <div class="bar"><span>Rodar</span><i style="--w:100%" class="ok"></i><b class="mono">107 min</b></div>
-          <div class="bar"><span>Subir muros</span><i style="--w:16.8%" class="warn"></i><b class="mono">18 min</b></div>
-          <div class="bar"><span>Volar</span><i style="--w:15%" class="warn"></i><b class="mono">16 min</b></div>
-          <div class="bar"><span>Recorrer techos</span><i style="--w:14%" class="warn"></i><b class="mono">15 min</b></div>
+          <div class="bar"><span>Rodar</span><i style="--w:100%" class="ok"></i><b class="mono">60 min</b></div>
+          <div class="bar"><span>Subir muros</span><i style="--w:16.7%" class="warn"></i><b class="mono">10 min</b></div>
+          <div class="bar"><span>Volar</span><i style="--w:15%" class="warn"></i><b class="mono">9 min</b></div>
+          <div class="bar"><span>Recorrer techos</span><i style="--w:14%" class="warn"></i><b class="mono">8,5 min</b></div>
         </div>
-        <p class="note">Una misión típica rueda la mayor parte del tiempo y trepa solo para llegar al punto de inspección.</p>
+        <p class="note">Por caída de 1,5 m: unos 75 g de desaceleración con 20 mm de amortiguación, contra unos 500 g con una jaula rígida.</p>
       </div>
     </div>
   </section>
 
   <section id="piezas" class="wrap block">
-    <div class="sec-head"><p class="eyebrow">Impresión en la H2D</p><h2>La jaula se imprime en segmentos</h2>
-      <p class="lead">La jaula mide 46 cm y la H2D imprime hasta unos 32 cm, así que cada anillo sale en 6 segmentos de 60° que encajan con pasadores. En la demo, <b>Cotas</b> muestra un segmento dentro del volumen de la impresora.</p></div>
+    <div class="sec-head"><p class="eyebrow">Impresión en la H2D</p><h2>Todo sale entero de la impresora</h2>
+      <p class="lead">Con 20 cm de diámetro, cada anillo cabe completo en el volumen de unos 32 cm de la H2D. En la demo, <b>Cotas</b> muestra el anillo dentro del volumen de la impresora.</p></div>
     <div class="table-scroll card">
       <table class="parts"><thead><tr><th>Pieza</th><th>Material</th><th class="num">Cant.</th><th>Medida aprox.</th><th>Nota</th></tr></thead>
         <tbody>
-          <tr><td>Segmentos de anillo</td><td><span class="mat pacf">PAHT-CF</span></td><td class="num">12</td><td>Arco de 60°, Ø 43 cm</td><td>Unión con pasador y tornillo M3 en inserto de bronce.</td></tr>
-          <tr><td>Banda de rodado</td><td><span class="mat tpu">TPU 95A HF</span></td><td class="num">12</td><td>Arco de 60°, 22 mm de alto</td><td>Relleno giroide al 20 %. Se reemplaza cuando se gasta.</td></tr>
-          <tr><td>Rayos</td><td><span class="mat pacf">PAHT-CF</span></td><td class="num">12</td><td>19 cm</td><td>Unen el anillo con el buje del eje.</td></tr>
-          <tr><td>Amortiguadores del eje</td><td><span class="mat tpu">TPU 95A HF</span></td><td class="num">2</td><td>Ø 76 mm</td><td>Llevan el rodamiento 6800 al centro.</td></tr>
-          <tr><td>Uniones de larguero</td><td><span class="mat pacf">PAHT-CF</span></td><td class="num">16</td><td>20 × 15 mm</td><td>Sujetan los 8 tubos de carbono a los anillos.</td></tr>
-          <tr><td>Abrazaderas del eje al dron</td><td><span class="mat petg">PETG-HF</span></td><td class="num">2</td><td>30 × 26 mm</td><td>Fijan el frame al eje central.</td></tr>
-          <tr><td>Caja de la Raspberry y soporte de cámaras</td><td><span class="mat petg">PETG-HF</span></td><td class="num">2</td><td>95 × 66 × 34 mm</td><td>Con ventilación y protección de la lente.</td></tr>
-          <tr><td>Soportes de sensores</td><td><span class="mat petg">PETG-HF</span></td><td class="num">3</td><td>Pequeños</td><td>Flujo óptico abajo y distancia al frente y arriba.</td></tr>
+          <tr><td>Anillo central</td><td><span class="mat pacf">PAHT-CF</span></td><td class="num">1</td><td>Ø 19 cm</td><td>Una sola pieza. Lleva las uniones de los 8 largueros.</td></tr>
+          <tr><td>Anillos de extremo con rayos</td><td><span class="mat pacf">PAHT-CF</span></td><td class="num">2</td><td>Ø 15 cm</td><td>Rayos integrados al buje del rodamiento.</td></tr>
+          <tr><td>Banda de rodado</td><td><span class="mat tpu">TPU 95A HF</span></td><td class="num">3</td><td>Anillos de 8 mm</td><td>Relleno giroide. Se reemplaza cuando se gasta.</td></tr>
+          <tr><td>Costillas de domo</td><td><span class="mat pacf">PAHT-CF</span></td><td class="num">8</td><td>Arco de radio 11 cm</td><td>4 por lado, sobresalen 3,5 cm.</td></tr>
+          <tr><td>Puntas de domo</td><td><span class="mat tpu">TPU 95A HF</span></td><td class="num">2</td><td>Ø 14 mm</td><td>Primer punto de contacto si cae de punta.</td></tr>
+          <tr><td>Amortiguadores del eje</td><td><span class="mat tpu">TPU 95A HF</span></td><td class="num">2</td><td>Ø 30 mm</td><td>Llevan el rodamiento 684ZZ al centro.</td></tr>
+          <tr><td>Bandeja de la ESP32</td><td><span class="mat petg">PETG-HF</span></td><td class="num">1</td><td>32 × 30 mm</td><td>Con gomas de TPU contra la vibración.</td></tr>
+          <tr><td>Carcasa de cámaras</td><td><span class="mat petg">PETG-HF</span></td><td class="num">1</td><td>26 × 20 × 12 mm</td><td>XIAO ESP32-S3 y MLX90640, con protector de lentes.</td></tr>
+          <tr><td>Abrazaderas del eje</td><td><span class="mat petg">PETG-HF</span></td><td class="num">2</td><td>12 × 8 mm</td><td>Fijan el frame al eje central.</td></tr>
         </tbody></table>
-    </div>
-  </section>
-
-  <section class="wrap block">
-    <div class="sec-head"><p class="eyebrow">Arquitectura</p><h2>Quién controla qué</h2>
-      <p class="lead">La controladora con ArduPilot mantiene estable el vuelo y el rodado. La Raspberry decide la misión y arma el informe. Los dos conversan por MAVLink.</p></div>
-    <div class="table-scroll card arch-wrap">
-      <svg class="arch" viewBox="0 0 960 300" role="img" aria-label="Arquitectura de control de Orbe">
-        <g class="node"><rect x="20" y="30" width="190" height="56" rx="6"/><text x="115" y="54">Radio ELRS</text><text class="sub" x="115" y="72">piloto · modo manual</text></g>
-        <g class="node"><rect x="20" y="122" width="190" height="56" rx="6"/><text x="115" y="146">Flujo óptico + distancia</text><text class="sub" x="115" y="164">3901-L0X · 2 × VL53L1X</text></g>
-        <g class="node"><rect x="20" y="214" width="190" height="56" rx="6"/><text x="115" y="238">GPS + brújula</text><text class="sub" x="115" y="256">solo en exteriores</text></g>
-        <g class="node key"><rect x="330" y="110" width="220" height="80" rx="6"/><text x="440" y="142">Controladora F405</text><text class="sub" x="440" y="162">ArduPilot · estabilidad y modos</text><text class="sub" x="440" y="178">ESC 55A → 4 motores</text></g>
-        <g class="node key"><rect x="660" y="110" width="220" height="80" rx="6"/><text x="770" y="142">Raspberry Pi 4</text><text class="sub" x="770" y="162">misión, cámaras, informe</text><text class="sub" x="770" y="178">Camera Module 3 · MLX90640</text></g>
-        <g class="node"><rect x="660" y="228" width="220" height="52" rx="6"/><text x="770" y="250">Notebook en terreno</text><text class="sub" x="770" y="266">video, mapa térmico, PDF</text></g>
-        <path class="wire" d="M210 58 H270 V130 H330"/><path class="wire" d="M210 150 H330"/><path class="wire" d="M210 242 H270 V170 H330"/>
-        <path class="wire" d="M550 150 H660"/><text class="proto" x="568" y="142">MAVLink · UART</text>
-        <path class="wire dash" d="M770 190 V228"/><text class="proto" x="780" y="214">WiFi</text>
-      </svg>
     </div>
   </section>
 
   <section id="plan" class="wrap block">
     <div class="sec-head"><p class="eyebrow">Hoja de ruta</p><h2>Diez semanas después de la mini planta</h2>
-      <p class="lead">Arranca cuando la mini planta esté lista, en la semana del 18 de enero de 2027. Las fases 1 y 2 son las mismas del dron sin jaula, así que el avance sirve aunque la jaula se atrase.</p></div>
+      <p class="lead">Arranca en la semana del 18 de enero de 2027. Lo más incierto es el firmware: por eso el dron vuela primero sin jaula.</p></div>
     <div class="table-scroll card">
       <div class="gantt g10" role="table" aria-label="Plan por semana">
         <div class="g-row g-head" role="row"><span role="columnheader">Actividad</span><span>18-01</span><span>25-01</span><span>01-02</span><span>08-02</span><span>15-02</span><span>22-02</span><span>01-03</span><span>08-03</span><span>15-03</span><span>22-03</span></div>
-        <div class="g-row" role="row"><span role="cell">Banco de empuje y elección de motores</span><i style="--s:1;--e:2"></i></div>
-        <div class="g-row" role="row"><span role="cell">Dron 7" volando en simulación y real</span><i style="--s:2;--e:4"></i></div>
-        <div class="g-row" role="row"><span role="cell">Diseño CAD de la jaula y pruebas de TPU</span><i style="--s:3;--e:5"></i></div>
-        <div class="g-row" role="row"><span role="cell">Impresión y armado de la jaula</span><i style="--s:5;--e:7"></i></div>
-        <div class="g-row" role="row"><span role="cell">Pruebas de caída con IMU</span><i style="--s:7;--e:8"></i></div>
-        <div class="g-row" role="row"><span role="cell">Rodar, trepar y techo con flujo óptico</span><i style="--s:7;--e:10"></i></div>
-        <div class="g-row" role="row"><span role="cell">Informe térmico automático y demo</span><i class="ms" style="--s:10;--e:11"></i></div>
+        <div class="g-row" role="row"><span role="cell">Banco de empuje con el Arduino</span><i style="--s:1;--e:2"></i></div>
+        <div class="g-row" role="row"><span role="cell">ESP32 con ESP-FC volando sin jaula</span><i style="--s:2;--e:4"></i></div>
+        <div class="g-row" role="row"><span role="cell">CAD de la jaula barril y los domos</span><i style="--s:3;--e:5"></i></div>
+        <div class="g-row" role="row"><span role="cell">Impresión y armado</span><i style="--s:5;--e:6"></i></div>
+        <div class="g-row" role="row"><span role="cell">Caída y autoadrizado</span><i style="--s:6;--e:7"></i></div>
+        <div class="g-row" role="row"><span role="cell">Firmware rodar, muro y techo</span><i style="--s:6;--e:10"></i></div>
+        <div class="g-row" role="row"><span role="cell">Cámara térmica, alarmas y demo</span><i class="ms" style="--s:8;--e:11"></i></div>
       </div>
     </div>
   </section>
 
   <section id="bom" class="wrap block">
     <div class="sec-head"><p class="eyebrow">Lista de materiales</p><h2>BOM de Orbe</h2>
-      <p class="lead">Precios revisados el 11-11-2026. Conversión: USD 1 = $950 y EUR 1 = $1.100 CLP. Si el dron se compra igual, Orbe agrega solo las secciones "Jaula y sensores nuevos" e "Impresión".</p></div>
+      <p class="lead">Precios revisados el 11-11-2026. Conversión: USD 1 = $950 y EUR 1 = $1.100 CLP. Ya tenemos la ESP32, la Raspberry Pi 4 y el Arduino.</p></div>
     <div class="bom-bar">
       <div class="seg" role="group" aria-label="Filtrar BOM">
         <button type="button" data-bom="all" aria-pressed="true">Todo</button>
-        <button type="button" data-bom="reuse" aria-pressed="false">Del dron</button>
-        <button type="button" data-bom="new" aria-pressed="false">Jaula y sensores</button>
+        <button type="button" data-bom="fly" aria-pressed="false">Vuelo</button>
+        <button type="button" data-bom="sense" aria-pressed="false">Sensores</button>
+        <button type="button" data-bom="cage" aria-pressed="false">Jaula</button>
         <button type="button" data-bom="print" aria-pressed="false">Impresión</button>
       </div>
       <span id="bomCount" class="muted"></span>
@@ -295,8 +333,8 @@
 </main>
 
 <footer class="foot wrap">
-  <p>Orbe · propuesta interna de Krontec Lab para la impresora Bambu Lab H2D. Pesos, consumos y desaceleraciones son estimaciones de diseño y se validan en el banco de pruebas. La imagen térmica de la demo es simulada.</p>
-  <p>Inspirado en robots híbridos de investigación que combinan vuelo y rodado dentro de una jaula. Fuentes de precios: Palta FPV Store, Rotorama, rcdrone.top, Pyrodrone, RaceDayQuads, Waveshare, eBay, Melopero, RobotShop, 3D Printing USA y Bambu Lab EU.</p>
+  <p>Orbe · propuesta interna de Krontec Lab para la impresora Bambu Lab H2D. Pesos, consumos y desaceleraciones son estimaciones de diseño y se validan en el banco de pruebas. La imagen térmica y el envío de alarmas de la demo son simulados.</p>
+  <p>Fuentes de precios: BetaFPV, RaceDayQuads, GetFPV, reach.dog, Sumozade, RobotShop, Waveshare, Palta FPV Store, 3D Printing USA y Bambu Lab EU. Firmware de vuelo: <a href="https://github.com/rtlopez/esp-fc" target="_blank" rel="noopener">ESP-FC</a>.</p>
 </footer>
 <script type="module" src="assets/main.js"></script>
 </body>
