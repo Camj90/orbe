@@ -1,11 +1,11 @@
-﻿// Escena 3D de Orbe: dron de 7" dentro de una jaula rodante. Escala: 1 unidad = 10 cm.
+// Escena 3D de Orbe: dron de 7" dentro de una jaula rodante. Escala: 1 unidad = 10 cm.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
-export const R = 2.3;            // radio exterior de la jaula (Ã˜ 46 cm)
+export const R = 2.3;            // radio exterior de la jaula (Ø 46 cm)
 export const HALF = 2.2;         // medio largo de la jaula (44 cm)
 export const ROOM = { WALL_Z: -8, CEIL_Y: 24 };
 export const TARGETS = [
@@ -14,13 +14,13 @@ export const TARGETS = [
 ];
 
 export const INFO = {
-  cage: { tag: 'JA-01', short: 'Jaula', name: 'Jaula rodante', desc: 'Cilindro de 46 cm de diÃ¡metro y 44 cm de largo. Gira libre alrededor del eje, asÃ­ que el dron puede rodar, trepar y chocar sin que las hÃ©lices toquen nada.', print: 'Anillos en PAHT-CF, impresos en 6 segmentos de 60Â°. Banda de rodado en TPU 95A con relleno giroide. Largueros de tubo de carbono comprado.', func: 'Rodar, absorber golpes y proteger las hÃ©lices' },
-  drone: { tag: 'DR-07', short: 'Dron 7"', name: 'Dron de 7 pulgadas', desc: 'El mismo dron del BOM anterior: frame GEPRC Mark4, motores 2807 de 1300 KV, controladora SpeedyBee F405 con ArduPilot y baterÃ­a 6S de Li-ion.', print: 'Soportes de cÃ¡mara y abrazaderas del eje en PETG-HF.', func: 'Empuje para rodar, trepar y volar' },
-  pi: { tag: 'CC-01', short: 'Raspberry + cÃ¡maras', name: 'Raspberry Pi 4 y cÃ¡maras', desc: 'Computadora a bordo con Camera Module 3 y cÃ¡mara tÃ©rmica MLX90640. Arma el informe de inspecciÃ³n con fotos y temperaturas.', print: 'Caja ventilada en PETG-HF.', func: 'InspecciÃ³n tÃ©rmica y misiones autÃ³nomas' },
-  hub: { tag: 'AM-01', short: 'Amortiguadores', name: 'Eje y amortiguadores', desc: 'Eje de carbono de 10 mm sobre rodamientos 6800. Entre el eje y los rayos de cada anillo va un anillo de TPU que se deforma en un golpe.', print: 'Amortiguadores en TPU 95A. Rayos en PAHT-CF.', func: 'Aislar la electrÃ³nica del impacto' },
-  flow: { tag: 'OF-01', short: 'Flujo Ã³ptico', name: 'Flujo Ã³ptico y distancia', desc: 'Matek 3901-L0X bajo el dron y dos VL53L1X (frontal y superior). Permiten mantener la posiciÃ³n sin GPS y detectar muro y techo.', print: 'Soportes en PETG-HF.', func: 'Navegar dentro de una planta' },
-  wall: { tag: 'TB-07', short: 'Tablero 78 Â°C', name: 'Tablero elÃ©ctrico en altura', desc: 'Objetivo de la demo: un tablero a 1,4 m sobre el piso, con una conexiÃ³n recalentada que el dron detecta al subir el muro.', print: 'â€”', func: 'Punto de inspecciÃ³n' },
-  ceil: { tag: 'BT-03', short: 'Empalme 64 Â°C', name: 'Empalme en bandeja de techo', desc: 'Objetivo de la demo: un empalme caliente en la bandeja portacables del techo, a 2,4 m.', print: 'â€”', func: 'Punto de inspecciÃ³n' }
+  cage: { tag: 'JA-01', short: 'Jaula', name: 'Jaula rodante', desc: 'Cilindro de 46 cm de diámetro y 44 cm de largo. Gira libre alrededor del eje, así que el dron puede rodar, trepar y chocar sin que las hélices toquen nada.', print: 'Anillos en PAHT-CF, impresos en 6 segmentos de 60°. Banda de rodado en TPU 95A con relleno giroide. Largueros de tubo de carbono comprado.', func: 'Rodar, absorber golpes y proteger las hélices' },
+  drone: { tag: 'DR-07', short: 'Dron 7"', name: 'Dron de 7 pulgadas', desc: 'El mismo dron del BOM anterior: frame GEPRC Mark4, motores 2807 de 1300 KV, controladora SpeedyBee F405 con ArduPilot y batería 6S de Li-ion.', print: 'Soportes de cámara y abrazaderas del eje en PETG-HF.', func: 'Empuje para rodar, trepar y volar' },
+  pi: { tag: 'CC-01', short: 'Raspberry + cámaras', name: 'Raspberry Pi 4 y cámaras', desc: 'Computadora a bordo con Camera Module 3 y cámara térmica MLX90640. Arma el informe de inspección con fotos y temperaturas.', print: 'Caja ventilada en PETG-HF.', func: 'Inspección térmica y misiones autónomas' },
+  hub: { tag: 'AM-01', short: 'Amortiguadores', name: 'Eje y amortiguadores', desc: 'Eje de carbono de 10 mm sobre rodamientos 6800. Entre el eje y los rayos de cada anillo va un anillo de TPU que se deforma en un golpe.', print: 'Amortiguadores en TPU 95A. Rayos en PAHT-CF.', func: 'Aislar la electrónica del impacto' },
+  flow: { tag: 'OF-01', short: 'Flujo óptico', name: 'Flujo óptico y distancia', desc: 'Matek 3901-L0X bajo el dron y dos VL53L1X (frontal y superior). Permiten mantener la posición sin GPS y detectar muro y techo.', print: 'Soportes en PETG-HF.', func: 'Navegar dentro de una planta' },
+  wall: { tag: 'TB-07', short: 'Tablero 78 °C', name: 'Tablero eléctrico en altura', desc: 'Objetivo de la demo: un tablero a 1,4 m sobre el piso, con una conexión recalentada que el dron detecta al subir el muro.', print: '—', func: 'Punto de inspección' },
+  ceil: { tag: 'BT-03', short: 'Empalme 64 °C', name: 'Empalme en bandeja de techo', desc: 'Objetivo de la demo: un empalme caliente en la bandeja portacables del techo, a 2,4 m.', print: '—', func: 'Punto de inspección' }
 };
 
 const VIEWS = {
@@ -149,7 +149,7 @@ export function createOrbe(container, opts = {}) {
   box(24, 1, 16.6, M.ceil, 0, CEIL_Y + 0.5, WALL_Z + 8);
   [-11.6, 11.6].forEach(x => box(0.8, 1.6, 16.6, M.ceil, x, CEIL_Y - 0.8, WALL_Z + 8));
 
-  // objetivos de inspecciÃ³n
+  // objetivos de inspección
   const wallT = keyed('wall', scene);
   rbox(2.6, 3.2, 0.7, 0.05, M.cab, 4.4, 14, WALL_Z + 0.35, wallT);
   box(2.2, 0.2, 0.2, M.cable, 4.4, 15.8, WALL_Z + 0.3, wallT);
@@ -163,11 +163,11 @@ export function createOrbe(container, opts = {}) {
   [-0.4, 0, 0.4].forEach(dx => box(0.16, 0.16, 15, M.cable, 4.0 + dx, CEIL_Y - 1.05, WALL_Z + 8, ceilT));
   const hot2 = rbox(0.5, 0.3, 0.7, 0.05, M.hot, 4.0, CEIL_Y - 1.0, 0.5, ceilT);
   tag('ceil', scene, [4.0, CEIL_Y - 2.2, 0.5]);
-  // obstÃ¡culo para el vuelo
+  // obstáculo para el vuelo
   rbox(5, 4.5, 5, 0.08, M.crate, 6.5, 2.25, 0.5);
   box(5.2, 0.4, 5.2, M.crate, 6.5, 0.2, 0.5);
 
-  // ---------- vehÃ­culo ----------
+  // ---------- vehículo ----------
   const veh = new THREE.Group(); scene.add(veh);
   const cageWrap = new THREE.Group(); veh.add(cageWrap);       // escala para el aplastamiento
   const cageRot = keyed('cage', cageWrap);                    // gira al rodar
@@ -217,9 +217,9 @@ export function createOrbe(container, opts = {}) {
     const disc = new THREE.Mesh(new THREE.CircleGeometry(0.89, 40), M.blur); disc.rotation.x = -Math.PI / 2; disc.position.y = 0.01; p.add(disc);
     props.push({ p, dir });
   });
-  // baterÃ­a bajo el frame
+  // batería bajo el frame
   rbox(0.75, 0.42, 1.26, 0.05, M.batt, 0, -0.18, 0, droneG);
-  // computadora y cÃ¡maras
+  // computadora y cámaras
   const piG = keyed('pi', droneG);
   rbox(0.95, 0.34, 0.66, 0.05, M.petgY, 0, 0.82, 0.05, piG);
   for (let i = 0; i < 5; i++) box(0.7, 0.02, 0.04, M.petgG, 0, 0.995, -0.18 + i * 0.1, piG);
@@ -229,7 +229,7 @@ export function createOrbe(container, opts = {}) {
   const l2 = cyl(0.05, 0.06, M.lens, 0.25, 0.5, -0.74, piG); l2.rotation.x = Math.PI / 2;
   cyl(0.02, 0.5, M.carbon, 0.35, 1.2, 0.3, droneG, 8);
   cyl(0.24, 0.07, M.petgG, 0.35, 1.47, 0.3, droneG);
-  // flujo Ã³ptico y distancia
+  // flujo óptico y distancia
   const flowG = keyed('flow', droneG);
   box(0.3, 0.04, 0.25, M.pcbB, 0, -0.42, 0.25, flowG);
   box(0.08, 0.03, 0.08, M.lens, 0, -0.45, 0.25, flowG);
@@ -270,7 +270,7 @@ export function createOrbe(container, opts = {}) {
   const arm = mesh(new THREE.CylinderGeometry(0.31, 0.36, 2.4, 24), M.skin, 1.65, 0.05, 0, hand); arm.rotation.z = Math.PI / 2;
   const cuff = mesh(new THREE.CylinderGeometry(0.42, 0.44, 1.6, 24), M.sleeve, 3.05, 0.05, 0, hand); cuff.rotation.z = Math.PI / 2;
   hand.position.set(HALF + 0.55, 2 * R + 0.12, 6); hand.rotation.set(0, 0, 0.55);
-  const hEl = document.createElement('div'); hEl.className = 'dim3d'; hEl.textContent = 'Mano adulta â‰ˆ 19 cm';
+  const hEl = document.createElement('div'); hEl.className = 'dim3d'; hEl.textContent = 'Mano adulta ≈ 19 cm';
   const hLab = new CSS2DObject(hEl); hLab.position.set(HALF + 1.6, 2 * R + 1.6, 6); handG.add(hLab);
 
   // cotas y volumen H2D
@@ -283,7 +283,7 @@ export function createOrbe(container, opts = {}) {
     const el = document.createElement('div'); el.className = 'dim3d'; el.textContent = text;
     const o = new CSS2DObject(el); o.position.copy(A).add(B).multiplyScalar(0.5); dims.add(o);
   }
-  dimLine([-HALF - 0.6, 0, 6], [-HALF - 0.6, 2 * R, 6], 'Ã˜ 46 cm', [0, 0, 0.2]);
+  dimLine([-HALF - 0.6, 0, 6], [-HALF - 0.6, 2 * R, 6], 'Ø 46 cm', [0, 0, 0.2]);
   dimLine([-HALF, 0.05, 6 + R + 0.6], [HALF, 0.05, 6 + R + 0.6], '44 cm', [0, 0, 0.2]);
   dimLine([-13, 0, WALL_Z + 0.4], [-13, CEIL_Y, WALL_Z + 0.4], 'Techo a 2,4 m', [0.3, 0, 0]);
   const vol = new THREE.Group(); dims.add(vol); vol.position.set(9.5, 1.625, 9.5);
@@ -295,11 +295,11 @@ export function createOrbe(container, opts = {}) {
   seg.rotation.x = -Math.PI / 2;
   const segT = mesh(new THREE.TorusGeometry(R - 0.1, 0.11, 10, 24, Math.PI / 3), M.tpu, -0.3, -1.6 + 0.4, -1.1, vol);
   segT.rotation.x = -Math.PI / 2;
-  const vEl = document.createElement('div'); vEl.className = 'dim3d vol'; vEl.textContent = 'H2D 32 Ã— 32 Ã— 32 cm Â· 1 segmento de anillo';
+  const vEl = document.createElement('div'); vEl.className = 'dim3d vol'; vEl.textContent = 'H2D 32 × 32 × 32 cm · 1 segmento de anillo';
   const vLab = new CSS2DObject(vEl); vLab.position.set(0, 1.9, 0); vol.add(vLab);
   dims.traverse(o => { o.visible = false; });
 
-  // ---------- selecciÃ³n y cÃ¡mara ----------
+  // ---------- selección y cámara ----------
   const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
   let down = null, selected = null, follow = false;
   function pickAt(e) {
